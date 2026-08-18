@@ -408,8 +408,10 @@ const S={
   lastExport:null,
   trainView:'home',     // home | edit
   editSid:null,
-  log:null              // active working session log
+  log:null,             // active working session log
+  location:null         // last-used training location
 };
+const LOCATIONS=['Home','BF Martigues','BF Saint-Louis','Hotel','Other'];
 const $=q=>document.querySelector(q);
 
 /* ---------------- Data access ---------------- */
@@ -423,6 +425,7 @@ async function loadAll(){
   const un=await idbGet('meta','unsaved');S.unsaved=un?un.v:0;
   const le=await idbGet('meta','lastExport');S.lastExport=le?le.v:null;
   const al=await idbGet('meta','activeLog');if(al&&al.v)S.log=al.v;
+  const lc=await idbGet('meta','lastLocation');S.location=lc&&lc.v?lc.v:LOCATIONS[0];
 }
 async function bumpUnsaved(n){S.unsaved+=(n==null?1:n);await idbPut('meta',{k:'unsaved',v:S.unsaved});renderBadge()}
 async function persistProgram(){await idbPut('meta',{k:'program',v:S.program});await bumpUnsaved()}
@@ -536,14 +539,23 @@ function groupSS(list){
   if(cur.length)groups.push(cur);
   return groups;
 }
-function lastSessionFor(name){
+/* Location-aware previous-performance lookup.
+   Returns {sameLoc, recent}:
+     sameLoc = most recent session at `loc` that has this exercise (or null)
+     recent  = most recent session ANY location that has this exercise (or null)
+   Old records without a stored location count only toward `recent`. */
+function lastSessionsFor(name,loc){
   const n=name.trim().toLowerCase();
+  let sameLoc=null,recent=null;
   for(let i=S.workouts.length-1;i>=0;i--){
     const w=S.workouts[i];
     const e=(w.exercises||[]).find(x=>x.name.trim().toLowerCase()===n);
-    if(e&&e.sets&&e.sets.length)return {date:w.date,sets:e.sets};
+    if(!(e&&e.sets&&e.sets.length))continue;
+    if(!recent)recent={date:w.date,sets:e.sets,location:w.location||null};
+    if(loc&&w.location===loc&&!sameLoc)sameLoc={date:w.date,sets:e.sets,location:w.location};
+    if(recent&&(sameLoc||!loc))break;
   }
-  return null;
+  return {sameLoc,recent};
 }
 function fmtPrev(p){return (p&&p.weight!=null?p.weight:'?')+'×'+(p&&p.reps!=null?p.reps:'?')}
 function renderTrain(){
@@ -640,16 +652,19 @@ async function startSession(sid){
     if(!ok)return;
     await clearActiveLog();
   }
-  S.log={sid:s.id,session:s.name,dateISO:todayIso(),
+  const loc=S.location||LOCATIONS[0];
+  S.log={sid:s.id,session:s.name,dateISO:todayIso(),location:loc,
     ex:s.exercises.map(e=>{
-      const last=lastSessionFor(e.name);
-      const lastSets=last?last.sets:null;
+      const refs=lastSessionsFor(e.name,loc);
+      // placeholder weights come from the SAME-location history if we have it, else most-recent-anywhere
+      const baseSets=(refs.sameLoc&&refs.sameLoc.sets)||(refs.recent&&refs.recent.sets)||null;
       const sets=[];
       for(let i=0;i<e.sets;i++){
-        const p=lastSets?(lastSets[i]||lastSets[lastSets.length-1]):null;
+        const p=baseSets?(baseSets[i]||baseSets[baseSets.length-1]):null;
         sets.push({w:'',r:'',rir:'',done:false,prev:p?{weight:p.weight,reps:p.reps}:null});
       }
-      return {name:e.name,target:e.sets+'×'+e.reps,rest:e.rest,rir:e.rir,ssWithNext:!!e.ssWithNext,note:e.note||'',sets,lastDate:last?last.date:null,lastSets:lastSets||null};
+      return {name:e.name,target:e.sets+'×'+e.reps,rest:e.rest,rir:e.rir,ssWithNext:!!e.ssWithNext,note:e.note||'',sets,
+        sameLoc:refs.sameLoc,recent:refs.recent};
     })};
   persistActiveLog();renderTrain();window.scrollTo(0,0);
 }
@@ -658,6 +673,11 @@ function logHTML(){
   let h='<div class="card"><div class="row" style="align-items:center">'+
     '<div style="flex:1"><div style="font-weight:800">'+esc(L.session)+'</div><div class="muted small">in progress — auto-saved draft</div></div>'+
     '<input type="date" value="'+esc(L.dateISO)+'" data-logdate="1" style="flex:0 0 150px"></div>'+
+    '<div class="row" style="margin-top:8px;align-items:center">'+
+    '<span class="muted small" style="flex:0 0 auto">📍 Location</span>'+
+    '<select data-loc="1" style="flex:1;background:#0f172a;color:#e5e9f0;border:1px solid #2a3550;border-radius:8px;padding:8px">'+
+      LOCATIONS.map(l=>'<option'+(l===L.location?' selected':'')+'>'+esc(l)+'</option>').join('')+
+    '</select></div>'+
     '<div class="row" style="margin-top:10px">'+
     '<button class="btn primary" data-act="finishSession">✓ Finish &amp; save</button>'+
     '<button class="btn ghost" data-act="cancelSession">✕ Discard</button></div></div>';
@@ -670,8 +690,16 @@ function logHTML(){
       const e=L.ex[i];
       let x='<div class="ex"><div class="hd"><span class="nm">'+esc(e.name)+'</span>'+
         '<span class="chip">'+esc(e.target)+'</span><span class="chip">rest '+esc(e.rest)+'</span>'+(e.rir?'<span class="chip">RIR '+esc(e.rir)+'</span>':'')+'</div>';
-      if(e.lastSets&&e.lastSets.length){
-        x+='<div class="lastline">↩ Last'+(e.lastDate?' ('+esc(e.lastDate.slice(0,5))+')':'')+': '+e.lastSets.map(fmtPrev).join(' · ')+'</div>';
+      // primary reference: last time at THIS location
+      if(e.sameLoc&&e.sameLoc.sets&&e.sameLoc.sets.length){
+        x+='<div class="lastline">↩ Here'+(e.sameLoc.location?' ['+esc(e.sameLoc.location)+']':'')+(e.sameLoc.date?' '+esc(e.sameLoc.date.slice(0,5)):'')+': '+e.sameLoc.sets.map(fmtPrev).join(' · ')+'</div>';
+      }
+      // context reference: most recent ANY location (only if a different session than the sameLoc one)
+      if(e.recent&&e.recent.sets&&e.recent.sets.length){
+        const dup=e.sameLoc&&e.sameLoc.date===e.recent.date&&(e.sameLoc.location||null)===(e.recent.location||null);
+        if(!dup){
+          x+='<div class="lastline" style="opacity:.65">↔ Recent'+(e.recent.location?' ['+esc(e.recent.location)+']':'')+(e.recent.date?' '+esc(e.recent.date.slice(0,5)):'')+': '+e.recent.sets.map(fmtPrev).join(' · ')+'</div>';
+        }
       }
       x+=e.sets.map((st,j)=>
         '<div class="setrow"><span class="sn">'+(j+1)+'</span>'+
@@ -717,10 +745,11 @@ async function finishSession(){
     (existing?'<p><b>A log for this session/date exists — it will be replaced.</b></p>':'');
   const ok=await confirmM('Save '+L.session+'?',body);
   if(!ok)return;
-  const rec={key,date:dm,session:L.session,exercises};
+  const rec={key,date:dm,session:L.session,location:L.location||null,exercises};
   await idbPut('workouts',rec);
   const ix=S.workouts.findIndex(w=>w.key===key);
   if(ix>=0)S.workouts[ix]=rec;else{S.workouts.push(rec);sortWorkouts()}
+  if(L.location){S.location=L.location;await idbPut('meta',{k:'lastLocation',v:L.location})}
   await clearActiveLog();
   await bumpUnsaved();
   S.trainView='home';renderTrain();
@@ -952,7 +981,7 @@ function drawChart(id,series,refs){
 function buildExport(){
   return {app:'yf-tracker',version:1,exported_at:new Date().toISOString(),
     health:S.health.map(h=>({...h})),
-    workouts:S.workouts.map(w=>({date:w.date,session:w.session,exercises:w.exercises})),
+    workouts:S.workouts.map(w=>({date:w.date,session:w.session,location:w.location||null,exercises:w.exercises})),
     program:S.program};
 }
 function exportName(){const t=new Date();return'yf-tracker-export-'+t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate())+'.json'}
@@ -1013,7 +1042,7 @@ async function doImport(file){
   sortHealth();
   for(const w of j.workouts){
     if(!w||!w.date||!w.session)continue;
-    const rec={key:w.date+'|'+w.session,date:w.date,session:w.session,exercises:w.exercises||[]};
+    const rec={key:w.date+'|'+w.session,date:w.date,session:w.session,location:w.location||null,exercises:w.exercises||[]};
     await idbPut('workouts',rec);
     const i=S.workouts.findIndex(x=>x.key===rec.key);
     if(i>=0)S.workouts[i]=rec;else S.workouts.push(rec);
@@ -1052,7 +1081,7 @@ function helpPanel(){
   '<p><b>Daily use:</b> log your day in Entry, log workouts in Train. Everything is stored on-device instantly (IndexedDB).</p>'+
   '<p><b>Sync:</b> tap 📤 → Export JSON → Save to Files → iCloud Drive → <code>yf-tracker</code> folder. On the Mac, the merge script folds it into <code>data/health_data.csv</code> + <code>data/training_log.csv</code>.</p>'+
   '<p><b>⚠️ Persistence:</b> iOS can clear this app\'s local data after ~7 days of NOT opening it. You use it daily so this is unlikely — but the <b>Export is also your backup</b>. Export regularly; <b>Import</b> restores everything on a new phone or after eviction.</p>'+
-  '<p class="muted small">v1.3 · program YF-UL5 v1.3 · single-file offline app · no network calls</p>',
+  '<p class="muted small">v1.4 · program YF-UL5 v1.3 · location-aware history · single-file offline app · no network calls</p>',
   [{txt:'Close',cls:'primary',val:true}]);
 }
 
@@ -1154,6 +1183,7 @@ document.addEventListener('change',e=>{
   const el=e.target;
   if(el.id==='entryDate')loadEntryForm();
   if(el.dataset.logdate){S.log.dateISO=el.value;persistActiveLog()}
+  if(el.dataset.loc&&S.log){S.log.location=el.value;persistActiveLog()}
   if(el.id==='selPeriod'||el.id==='selAgg')renderTrends();
   if(el.id==='fileImport'&&el.files&&el.files[0]){doImport(el.files[0]);el.value=''}
 });
