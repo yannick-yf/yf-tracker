@@ -180,7 +180,7 @@ canvas{display:block;width:100%}
 <header>
   <div>
     <h1>💪 YF Tracker</h1>
-    <div class="ver">v1.6 · YF-UL5 v1.4</div>
+    <div class="ver" id="versionLabel">v1.7 · loading program</div>
   </div>
   <div class="spacer"></div>
   <button class="badge" id="unsavedBadge" data-act="sync">● 0 unsaved</button>
@@ -293,12 +293,13 @@ canvas{display:block;width:100%}
 <script>
 'use strict';
 /* =====================================================================
-   YF Tracker v1.0 — single-file offline health & training tracker
+   YF Tracker v1.7 — single-file offline health & training tracker
    Data lives in IndexedDB. Sync = JSON export -> iCloud -> Mac merge.
    ===================================================================== */
 
 /* ---------------- IndexedDB tiny promise wrapper ---------------- */
 const DB_NAME='yf-tracker', DB_VER=1;
+const APP_VERSION='v1.7';
 let _db=null;
 function openDB(){
   return new Promise((res,rej)=>{
@@ -426,6 +427,10 @@ async function loadAll(){
   const le=await idbGet('meta','lastExport');S.lastExport=le?le.v:null;
   const al=await idbGet('meta','activeLog');if(al&&al.v)S.log=al.v;
   const lc=await idbGet('meta','lastLocation');S.location=lc&&lc.v?lc.v:LOCATIONS[0];
+  if(S.log&&Array.isArray(S.log.ex)){
+    S.log.location=S.log.location||S.location;
+    refreshLogReferences(S.log);
+  }
 }
 async function bumpUnsaved(n){S.unsaved+=(n==null?1:n);await idbPut('meta',{k:'unsaved',v:S.unsaved});renderBadge()}
 async function persistProgram(){await idbPut('meta',{k:'program',v:S.program});await bumpUnsaved()}
@@ -557,6 +562,30 @@ function lastSessionsFor(name,loc){
   }
   return {sameLoc,recent};
 }
+function refreshExerciseReferences(e,loc){
+  const refs=lastSessionsFor(e.name,loc);
+  e.sameLoc=refs.sameLoc;e.recent=refs.recent;
+  const baseSets=(refs.sameLoc&&refs.sameLoc.sets)||(refs.recent&&refs.recent.sets)||null;
+  e.sets.forEach((st,i)=>{
+    const p=baseSets?(baseSets[i]||baseSets[baseSets.length-1]):null;
+    st.prev=p?{weight:p.weight,reps:p.reps}:null;
+  });
+}
+function refreshLogReferences(log){log.ex.forEach(e=>refreshExerciseReferences(e,log.location))}
+function locationOptions(selected){
+  return LOCATIONS.map(l=>'<option'+(l===selected?' selected':'')+'>'+esc(l)+'</option>').join('');
+}
+function setTrainingLocation(loc){
+  if(!LOCATIONS.includes(loc))return;
+  S.location=loc;
+  idbPut('meta',{k:'lastLocation',v:loc});
+  if(S.log){
+    S.log.location=loc;
+    refreshLogReferences(S.log);
+    persistActiveLog();
+    renderTrain();
+  }
+}
 function fmtPrev(p){return (p&&p.weight!=null?p.weight:'?')+'×'+(p&&p.reps!=null?p.reps:'?')}
 function renderTrain(){
   const root=$('#panel-train');
@@ -567,7 +596,9 @@ function renderTrain(){
 function homeHTML(){
   const today=SCHEDULE[new Date().getDay()];
   const tSess=today?S.program.sessions.find(s=>s.name===today):null;
-  let h='';
+  let h='<div class="card"><div class="row"><span class="muted small" style="flex:0 0 auto">📍 Location</span>'+
+    '<select data-home-loc="1">'+locationOptions(S.location)+'</select></div>'+
+    '<div class="muted small" style="margin-top:6px">Choose the gym before starting to see its previous weights.</div></div>';
   if(tSess){
     h+='<div class="today-chip"><div style="flex:1"><div class="muted small">📅 Today</div><div style="font-weight:700">'+esc(tSess.name)+' — '+esc(tSess.sub||'')+'</div></div>'+
       '<button class="btn primary sm" data-act="startSession" data-sid="'+tSess.id+'">Start</button></div>';
@@ -655,17 +686,14 @@ async function startSession(sid){
   const loc=S.location||LOCATIONS[0];
   S.log={sid:s.id,session:s.name,dateISO:todayIso(),location:loc,
     ex:s.exercises.map(e=>{
-      const refs=lastSessionsFor(e.name,loc);
-      // placeholder weights come from the SAME-location history if we have it, else most-recent-anywhere
-      const baseSets=(refs.sameLoc&&refs.sameLoc.sets)||(refs.recent&&refs.recent.sets)||null;
       const sets=[];
       for(let i=0;i<e.sets;i++){
-        const p=baseSets?(baseSets[i]||baseSets[baseSets.length-1]):null;
-        sets.push({w:'',r:'',rir:'',done:false,prev:p?{weight:p.weight,reps:p.reps}:null});
+        sets.push({w:'',r:'',rir:'',done:false,prev:null});
       }
       return {name:e.name,target:e.sets+'×'+e.reps,rest:e.rest,rir:e.rir,ssWithNext:!!e.ssWithNext,note:e.note||'',sets,
-        sameLoc:refs.sameLoc,recent:refs.recent};
+        sameLoc:null,recent:null};
     })};
+  refreshLogReferences(S.log);
   persistActiveLog();renderTrain();window.scrollTo(0,0);
 }
 function logHTML(){
@@ -676,7 +704,7 @@ function logHTML(){
     '<div class="row" style="margin-top:8px;align-items:center">'+
     '<span class="muted small" style="flex:0 0 auto">📍 Location</span>'+
     '<select data-loc="1" style="flex:1;background:#0f172a;color:#e5e9f0;border:1px solid #2a3550;border-radius:8px;padding:8px">'+
-      LOCATIONS.map(l=>'<option'+(l===L.location?' selected':'')+'>'+esc(l)+'</option>').join('')+
+      locationOptions(L.location)+
     '</select></div>'+
     '<div class="row" style="margin-top:10px">'+
     '<button class="btn primary" data-act="finishSession">✓ Finish &amp; save</button>'+
@@ -1050,6 +1078,7 @@ async function doImport(file){
   }
   sortWorkouts();
   if(j.program&&j.program.sessions){S.program=j.program;await idbPut('meta',{k:'program',v:S.program})}
+  renderVersion();
   await bumpUnsaved(n);
   loadEntryForm();renderRecent();renderTrain();if(S.tab==='trends')renderTrends();
   toast('Imported '+n+' records ✓');
@@ -1081,7 +1110,7 @@ function helpPanel(){
   '<p><b>Daily use:</b> log your day in Entry, log workouts in Train. Everything is stored on-device instantly (IndexedDB).</p>'+
   '<p><b>Sync:</b> tap 📤 → Export JSON → Save to Files → iCloud Drive → <code>yf-tracker</code> folder. On the Mac, the merge script folds it into <code>data/health_data.csv</code> + <code>data/training_log.csv</code>.</p>'+
   '<p><b>⚠️ Persistence:</b> iOS can clear this app\'s local data after ~7 days of NOT opening it. You use it daily so this is unlikely — but the <b>Export is also your backup</b>. Export regularly; <b>Import</b> restores everything on a new phone or after eviction.</p>'+
-  '<p class="muted small">v1.6 · program YF-UL5 v1.5 · distinct gym baselines · single-file offline app · no network calls</p>',
+  '<p class="muted small">'+APP_VERSION+' · program '+esc(S.program.name||'custom')+' · distinct gym baselines · single-file offline app · no network calls</p>',
   [{txt:'Close',cls:'primary',val:true}]);
 }
 
@@ -1092,6 +1121,9 @@ function renderBadge(){
   const b=$('#unsavedBadge');
   b.textContent='● '+S.unsaved+' unsaved';
   b.classList.toggle('dirty',S.unsaved>0);
+}
+function renderVersion(){
+  $('#versionLabel').textContent=APP_VERSION+' · program '+(S.program.name||'custom');
 }
 function setTab(t){
   S.tab=t;
@@ -1183,7 +1215,8 @@ document.addEventListener('change',e=>{
   const el=e.target;
   if(el.id==='entryDate')loadEntryForm();
   if(el.dataset.logdate){S.log.dateISO=el.value;persistActiveLog()}
-  if(el.dataset.loc&&S.log){S.log.location=el.value;persistActiveLog()}
+  if(el.dataset.homeLoc)setTrainingLocation(el.value);
+  if(el.dataset.loc&&S.log)setTrainingLocation(el.value);
   if(el.id==='selPeriod'||el.id==='selAgg')renderTrends();
   if(el.id==='fileImport'&&el.files&&el.files[0]){doImport(el.files[0]);el.value=''}
 });
@@ -1196,6 +1229,7 @@ window.addEventListener('resize',()=>{clearTimeout(_rzTm);_rzTm=setTimeout(()=>{
   if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
   await openDB();
   await loadAll();
+  renderVersion();
   $('#entryDate').value=todayIso();
   loadEntryForm();renderRecent();renderBadge();
   if(S.log){setTab('train')}   // resume in-progress session draft
