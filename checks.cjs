@@ -287,10 +287,9 @@ check('Load guidance follows first-set reps and RIR, not another machine load', 
 
 check('A replacement retains original performed sets at finish', () => {
     const original = itemFor('pulldown'); putSet(original, 0, entered(70, 9, 1));
-    const replacement = { ...api.knownExercise('dyRow'), slotKey: 'pulldown' };
+    const replacement = { ...api.knownExercise('frontPulldown'), slotKey: 'pulldown' };
     api.state.substitutions.set('upper-a|ttl|pulldown', replacement);
-    const setup = { id: 'row-confirmed', name: 'Confirmed row', kind: 'Plate-loaded', unit: 'kg per arm', venues: ['ttl'], previous: null, exerciseKey: 'dyRow' };
-    api.state.custom.set(setup.id, setup); api.state.equipment.set('ttl|dyRow', setup.id); putSet(itemFor('dyRow'), 0, entered(30, 10, 1));
+    putSet(itemFor('frontPulldown'), 0, entered(35, 10, 1));
     api.finishSample(); assert.equal(api.state.workouts[0].exercises.length, 2);
 });
 
