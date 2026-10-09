@@ -1,1253 +1,1631 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="YF Tracker">
-<meta name="theme-color" content="#0f1115">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>YF Tracker</title>
-<style>
-/* ============ Reset / base ============ */
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{font-size:16px}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  background:#0f1115;color:#e6e9ef;line-height:1.4;
-  padding-bottom:calc(64px + env(safe-area-inset-bottom));
-  min-height:100vh;
-}
-button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-input,select,textarea{font:inherit;color:#e6e9ef;background:#0c0e12;border:1px solid #2a2f3a;border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
-input:focus,select:focus{outline:none;border-color:#667eea}
-input::placeholder{color:#565e6e}
-h1{font-size:1.05rem;font-weight:700}
-h2{font-size:1rem;font-weight:700;margin-bottom:.5rem}
-h3{font-size:.95rem;font-weight:600}
-/* ============ Header ============ */
-header{
-  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;
-  padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:#0f1115ee;
-  border-bottom:1px solid #1d222c;backdrop-filter:blur(8px);
-}
-header .ver{font-size:.65rem;color:#8b93a3;line-height:1.1}
-header .spacer{flex:1}
-.badge{
-  font-size:.7rem;padding:5px 9px;border-radius:999px;border:1px solid #2a2f3a;color:#8b93a3;
-  min-height:0;display:inline-flex;align-items:center;gap:5px;
-}
-.badge.dirty{border-color:#f59e0b;color:#f59e0b}
-.iconbtn{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;font-size:1.15rem;border-radius:10px}
-.iconbtn:active{background:#1d222c}
-/* ============ Tab bar ============ */
-nav.tabbar{
-  position:fixed;bottom:0;left:0;right:0;z-index:50;display:flex;
-  background:#12151bee;border-top:1px solid #1d222c;backdrop-filter:blur(8px);
-  padding-bottom:env(safe-area-inset-bottom);
-}
-nav.tabbar button{
-  flex:1;padding:10px 0 8px;font-size:.72rem;color:#8b93a3;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;
-}
-nav.tabbar button .ic{font-size:1.25rem}
-nav.tabbar button.on{color:#667eea}
-/* ============ Layout ============ */
-main{padding:12px;max-width:760px;margin:0 auto}
-section.panel{display:none}
-section.panel.on{display:block}
-.card{background:#171a21;border:1px solid #2a2f3a;border-radius:12px;padding:14px;margin-bottom:12px}
-.row{display:flex;gap:10px;align-items:center}
-.row>*{flex:1}
-.muted{color:#8b93a3;font-size:.8rem}
-.small{font-size:.75rem}
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  background:#232838;border:1px solid #364066;color:#c7d2fe;border-radius:10px;
-  padding:12px 16px;min-height:48px;font-weight:600;width:100%;
-}
-.btn:active{background:#2b3149}
-.btn.primary{background:#4c5bd4;border-color:#5b6cf0;color:#fff}
-.btn.ghost{background:transparent;border-color:#2a2f3a;color:#8b93a3}
-.btn.danger{background:#3a1214;border-color:#7f1d1d;color:#fca5a5}
-.btn.sm{min-height:38px;padding:6px 12px;width:auto;font-size:.85rem}
-.chip{display:inline-block;font-size:.68rem;padding:3px 8px;border-radius:999px;background:#232838;color:#9aa4c7;margin-right:5px;margin-bottom:3px}
-label.f{display:block;font-size:.75rem;color:#8b93a3;margin:10px 0 4px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.hint-ok{color:#10b981;font-size:.75rem}
-.hint-new{color:#667eea;font-size:.75rem}
-hr.sep{border:0;border-top:1px solid #232834;margin:12px 0}
-/* ============ Recent list ============ */
-.recent{display:flex;flex-direction:column;gap:6px}
-.recent .r{
-  display:flex;align-items:center;gap:8px;background:#12151b;border:1px solid #232834;
-  border-radius:10px;padding:9px 10px;font-size:.78rem;
-}
-.recent .r .d{font-weight:700;min-width:52px}
-.recent .r .vals{flex:1;color:#8b93a3;display:flex;flex-wrap:wrap;gap:4px 10px}
-.recent .r button{min-width:38px;min-height:38px;font-size:1rem;color:#8b93a3}
-/* ============ Train ============ */
-.sess{display:flex;align-items:center;gap:10px}
-.sess .info{flex:1}
-.sess .info .nm{font-weight:700}
-.today-chip{
-  display:flex;align-items:center;gap:10px;background:#141b2e;border:1px solid #364066;
-  border-radius:12px;padding:12px;margin-bottom:12px;
-}
-.exgroup{background:#171a21;border:1px solid #2a2f3a;border-radius:12px;margin-bottom:12px;overflow:hidden}
-.exgroup.ss{border-left:4px solid #667eea}
-.ss-tag{font-size:.62rem;font-weight:700;letter-spacing:.08em;color:#8fa0f4;padding:8px 14px 0}
-.ex{padding:12px 14px}
-.ex + .ex{border-top:1px dashed #2a2f3a}
-.ex .hd{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-.ex .hd .nm{font-weight:700;font-size:.95rem}
-.ex .lastline{font-size:.72rem;color:#7f8798;background:#12151b;border-radius:6px;padding:4px 8px;margin:0 0 8px}
-.setrow{display:flex;align-items:center;gap:6px;margin:6px 0}
-.setrow .sn{min-width:20px;color:#8b93a3;font-size:.75rem;text-align:center}
-.setrow input{min-height:44px;padding:8px;text-align:center}
-.setrow input.w{flex:2.2}
-.setrow input.r{flex:1.8}
-.setrow input.rr{flex:1.3}
-.setrow .x{color:#565e6e;font-size:.8rem}
-.setrow button.done{
-  min-width:44px;min-height:44px;border:1px solid #2a2f3a;border-radius:10px;color:#565e6e;font-size:1rem;
-}
-.setrow button.done.on{background:#064e3b;border-color:#10b981;color:#10b981}
-.setrow button.del{min-width:34px;min-height:44px;color:#565e6e}
-.notein input{min-height:38px;font-size:.8rem;padding:7px 10px}
-/* editor */
-.exed{display:flex;align-items:center;gap:6px;padding:10px 12px;border-top:1px dashed #2a2f3a}
-.exed:first-child{border-top:0}
-.exed .nm{flex:1;font-size:.88rem}
-.exed .tg{color:#8b93a3;font-size:.7rem}
-.exed button{min-width:38px;min-height:44px;color:#8b93a3;font-size:.95rem}
-.exed button.linkon{color:#8fa0f4}
-/* ============ Rest timer ============ */
-#restTimer{
-  position:fixed;left:12px;right:12px;bottom:calc(64px + env(safe-area-inset-bottom) + 8px);z-index:60;
-  display:none;align-items:center;gap:12px;background:#141b2e;border:1px solid #5b6cf0;
-  border-radius:14px;padding:12px 16px;box-shadow:0 8px 24px #0009;
-}
-#restTimer.on{display:flex}
-#restTimer.flash{animation:tflash .5s 4}
-@keyframes tflash{50%{background:#4c5bd4}}
-#restTimer .t{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
-#restTimer .lb{flex:1;font-size:.75rem;color:#9aa4c7}
-/* ============ KPI ============ */
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-.kpi{border-radius:10px;padding:10px 6px;text-align:center;min-height:86px;border:1px solid}
-.kpi .l{color:#9ca3af;font-size:.62rem;margin-bottom:3px}
-.kpi .v{font-size:1.15rem;font-weight:700}
-.kpi .u{color:#6b7280;font-size:.6rem}
-.kpi.green{border-color:#10b981;background:#064e3b}.kpi.green .v{color:#10b981}
-.kpi.amber{border-color:#f59e0b;background:#451a03}.kpi.amber .v{color:#f59e0b}
-.kpi.red{border-color:#ef4444;background:#450a0a}.kpi.red .v{color:#ef4444}
-.kpi.neutral{border-color:#667eea;background:#1e1b4b}.kpi.neutral .v{color:#667eea}
-.legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin:2px 0 6px}
-.legend .lg{font-size:.68rem;color:#8b93a3;display:inline-flex;align-items:center;gap:5px}
-.legend .dot{width:9px;height:9px;border-radius:3px;display:inline-block}
-canvas{display:block;width:100%}
-/* ============ Modal / toast ============ */
-#ovl{position:fixed;inset:0;background:#000a;z-index:100;display:none;align-items:flex-end;justify-content:center}
-#ovl.on{display:flex}
-#modal{
-  background:#171a21;border:1px solid #2a2f3a;border-radius:16px 16px 0 0;width:100%;max-width:760px;
-  max-height:86vh;overflow:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom));
-}
-#modal h2{margin-bottom:10px}
-#modal .body{font-size:.88rem;color:#c3c9d6}
-#modal .body p{margin:8px 0}
-#modal .body ol,#modal .body ul{margin:8px 0 8px 18px}
-#modal .body li{margin:5px 0}
-#modal .body code{background:#0c0e12;border:1px solid #2a2f3a;border-radius:6px;padding:1px 6px;font-size:.78rem}
-#modal .btns{display:flex;gap:10px;margin-top:16px}
-#modal .btns .btn{flex:1}
-#toast{
-  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom) + 8px);
-  background:#232838;border:1px solid #5b6cf0;color:#e6e9ef;padding:10px 18px;border-radius:999px;
-  font-size:.85rem;z-index:120;display:none;white-space:nowrap;box-shadow:0 6px 20px #0008;
-}
-#toast.on{display:block}
-#updateBar{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 8px);background:#232838;border:1px solid #5b6cf0;
-  color:#e6e9ef;padding:10px 14px;border-radius:12px;font-size:.85rem;z-index:130;display:none;align-items:center;gap:10px;box-shadow:0 6px 20px #0008}
-#updateBar.on{display:flex}
-#updateBar span{flex:1}
-.diffline{font-size:.8rem;margin:3px 0}
-.diffline b{color:#f59e0b}
-@media(min-width:520px){.kpis{grid-template-columns:repeat(6,1fr)}}
-</style>
-</head>
-<body>
-
-<header>
-  <div>
-    <h1>💪 YF Tracker</h1>
-    <div class="ver" id="versionLabel">v1.7.1 · loading program</div>
-  </div>
-  <div class="spacer"></div>
-  <button class="badge" id="unsavedBadge" data-act="sync">● 0 unsaved</button>
-  <button class="iconbtn" data-act="sync" title="Sync / Export">📤</button>
-  <button class="iconbtn" data-act="help" title="Help">ⓘ</button>
-</header>
-
-<main>
-  <!-- ============ ENTRY ============ -->
-  <section class="panel on" id="panel-entry">
-    <div class="card">
-      <h2>📅 Select or Add Date</h2>
-      <div class="row">
-        <input type="date" id="entryDate">
-        <span id="dateHint" class="hint-new" style="flex:0 0 auto">🆕 New date</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>📊 Health Data Entry</h2>
-      <h3 class="muted">Activity &amp; Sleep</h3>
-      <label class="f">Steps (count)</label>
-      <input id="inSteps" inputmode="numeric" placeholder="e.g. 12000">
-      <label class="f">Sleep — hours / minutes (or total min in the right box)</label>
-      <div class="row">
-        <input id="inSleepH" inputmode="numeric" placeholder="h">
-        <input id="inSleepM" inputmode="numeric" placeholder="min">
-      </div>
-      <div class="muted small" id="sleepHint" style="margin-top:4px"></div>
-      <label class="f">Workout duration (min, Apple Watch green ring)</label>
-      <input id="inWorkout" inputmode="numeric" placeholder="e.g. 120">
-      <hr class="sep">
-      <h3 class="muted">Body &amp; Nutrition</h3>
-      <div class="grid2">
-        <div>
-          <label class="f">Weight (kg)</label>
-          <input id="inWeight" inputmode="decimal" placeholder="e.g. 73.9">
-        </div>
-        <div>
-          <label class="f">Waist (cm)</label>
-          <input id="inWaist" inputmode="decimal" placeholder="e.g. 82.0">
-        </div>
-        <div>
-          <label class="f">Calories burned (Apple Total)</label>
-          <input id="inBurned" inputmode="numeric" placeholder="e.g. 3150">
-        </div>
-        <div>
-          <label class="f">Calories consumed</label>
-          <input id="inConsumed" inputmode="numeric" placeholder="e.g. 3000">
-        </div>
-      </div>
-      <div style="margin-top:14px"><button class="btn primary" data-act="saveEntry">💾 Save day</button></div>
-    </div>
-
-    <div class="card">
-      <h2>🗓 Recent days</h2>
-      <div class="recent" id="recentList"></div>
-    </div>
-  </section>
-
-  <!-- ============ TRAIN ============ -->
-  <section class="panel" id="panel-train"></section>
-
-  <!-- ============ TRENDS ============ -->
-  <section class="panel" id="panel-trends">
-    <div class="card">
-      <div class="row">
-        <div>
-          <label class="f">📅 Time Period</label>
-          <select id="selPeriod">
-            <option value="30">Last 30 Days</option>
-            <option value="90">Last 3 Months</option>
-            <option value="all">All Data</option>
-          </select>
-        </div>
-        <div>
-          <label class="f">📊 Aggregation</label>
-          <select id="selAgg">
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </div>
-      </div>
-      <div class="muted small" id="periodInfo" style="margin-top:8px"></div>
-    </div>
-    <h2 style="margin:4px 0 8px">📋 Key Metrics</h2>
-    <div class="kpis" id="kpiGrid"></div>
-    <h2 style="margin:4px 0 8px">📈 Charts</h2>
-    <div id="chartsWrap"></div>
-  </section>
-</main>
-
-<nav class="tabbar">
-  <button data-act="tab" data-tab="entry" class="on"><span class="ic">➕</span>Entry</button>
-  <button data-act="tab" data-tab="train"><span class="ic">🏋️</span>Train</button>
-  <button data-act="tab" data-tab="trends"><span class="ic">📊</span>Trends</button>
-</nav>
-
-<div id="restTimer">
-  <div class="t" id="rtTime">0:00</div>
-  <div class="lb" id="rtLabel"></div>
-  <button class="iconbtn" data-act="timerClose">✕</button>
-</div>
-
-<div id="ovl"><div id="modal"></div></div>
-<div id="updateBar"><span>New version ready.</span><button class="btn primary sm" data-act="reloadApp">Reload</button></div>
-<div id="toast"></div>
-<input type="file" id="fileImport" accept=".json,application/json" style="display:none">
-
-<script>
-'use strict';
-/* =====================================================================
-   YF Tracker v1.7.1 — single-file offline health & training tracker
-   Data lives in IndexedDB. Sync = JSON export -> iCloud -> Mac merge.
-   ===================================================================== */
-
-/* ---------------- IndexedDB tiny promise wrapper ---------------- */
-const DB_NAME='yf-tracker', DB_VER=1;
-const APP_VERSION='v1.7.1';
-let _db=null;
-function openDB(){
-  return new Promise((res,rej)=>{
-    const rq=indexedDB.open(DB_NAME,DB_VER);
-    rq.onupgradeneeded=e=>{
-      const d=e.target.result;
-      if(!d.objectStoreNames.contains('health'))d.createObjectStore('health',{keyPath:'date'});
-      if(!d.objectStoreNames.contains('workouts'))d.createObjectStore('workouts',{keyPath:'key'});
-      if(!d.objectStoreNames.contains('meta'))d.createObjectStore('meta',{keyPath:'k'});
-    };
-    rq.onsuccess=()=>{_db=rq.result;res(_db)};
-    rq.onerror=()=>rej(rq.error);
-  });
-}
-function tx(store,mode,fn){
-  return new Promise((res,rej)=>{
-    const t=_db.transaction(store,mode),s=t.objectStore(store);
-    const out=fn(s);
-    t.oncomplete=()=>res(out&&out._v!==undefined?out._v:out);
-    t.onerror=()=>rej(t.error);
-  });
-}
-function idbGetAll(store){return new Promise((res,rej)=>{const t=_db.transaction(store,'readonly');const rq=t.objectStore(store).getAll();rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>rej(rq.error)})}
-function idbPut(store,obj){return tx(store,'readwrite',s=>{s.put(obj)})}
-function idbDel(store,key){return tx(store,'readwrite',s=>{s.delete(key)})}
-function idbGet(store,key){return new Promise((res,rej)=>{const t=_db.transaction(store,'readonly');const rq=t.objectStore(store).get(key);rq.onsuccess=()=>res(rq.result);rq.onerror=()=>rej(rq.error)})}
-
-/* ---------------- Date & number helpers ---------------- */
-function pad(n){return n<10?'0'+n:''+n}
-function isoToDdmm(iso){const[y,m,d]=iso.split('-');return d+'/'+m+'/'+y}
-function ddmmToIso(dm){const[d,m,y]=dm.split('/');return y+'-'+m+'-'+d}
-function ddmmToDate(dm){const[d,m,y]=dm.split('/').map(Number);return new Date(y,m-1,d)}
-function todayIso(){const t=new Date();return t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate())}
-function fmtShort(dt){return pad(dt.getDate())+'/'+pad(dt.getMonth()+1)}
-function numOrNull(v){if(v===''||v==null)return null;const n=Number(String(v).replace(',','.'));return isNaN(n)?null:n}
-function csvCell(v){if(v==null||v==='')return'';const n=Number(v);return Number.isInteger(n)?n+'.0':String(n)}
-function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function minToH(m){if(m==null)return'';const h=Math.floor(m/60),mm=Math.round(m%60);return h+'h'+pad(mm)}
-
-/* ---------------- Program seed (YF-UL5 v1) ---------------- */
-let _idc=0;const nid=p=>p+'_'+(++_idc)+'_'+Math.random().toString(36).slice(2,7);
-function ex(name,sets,reps,rest,rir,opts){return Object.assign({id:nid('e'),name,sets,reps,rest,rir:rir||'',ssWithNext:false,note:''},opts||{})}
-const ABS=()=>[
-  ex('Weighted jackknife',4,'12','1:00','',{note:'34 kg → 36 when 4×12 clean'}),
-  ex('Russian twist',3,'20','0:45','',{note:'default 20 kg'}),
-  ex('Leg raise slow',1,'25','0:45','',{note:'or 2×15, BW'}),
-  ex('Sit-ups feet on ground (optionnel)',1,'25','0:45','',{note:'slow finisher, optional'}),
-  ex('Plank hold',2,'45-60s','0:45','',{note:'seconds in reps'})
-];
-function seedProgram(){
-  return {name:'YF-UL5 v1.3',sessions:[
-    {id:nid('s'),name:'Upper A',sub:'Chest/Back Heavy',exercises:[
-      ex('Tirage vertical prise large',3,'8-10','2:30','1-2',{note:'full ROM, no partials'}),
-      ex('Tirage horizontal prise serré',3,'10','2:30','1-2',{note:'full ROM, no partials'}),
-      ex('Développé couché barre',4,'5-8','3:00','1-2'),
-      ex('Tirage vertical unilatéral',3,'10','2:00','2'),
-      ex('Dips (lestés ou BW)',3,'8-10','2:00','2'),
-      ex('Shrug barre',3,'12-15','1:30','1',{ssWithNext:true,note:'72.5-75 kg, true superset'}),
-      ex('Élévations latérales',3,'12-15','1:30','1',{note:'8 kg strict, pause 1s top'}),
-      ex('Face pulls',3,'12-15','1:00','1')
-    ]},
-    {id:nid('s'),name:'Lower A',sub:'Quad/Ham + Abs',exercises:[
-      ex('Back squat barre',4,'5-8','3:00','2'),
-      ex('Bulgarian split squat',4,'10/leg','2:00','2'),
-      ex('Romanian deadlift barre',4,'8','3:00','2',{note:'start light, ramping'}),
-      ...ABS()
-    ]},
-    {id:nid('s'),name:'Upper B',sub:'Shoulders/Arms',exercises:[
-      ex('Standing OHP barbell',4,'5-8','3:00','2'),
-      ex('Shoulder press machine (optionnel)',3,'8-12','2:00','0-1',{note:'si machine dispo — ¾ lockout, 2-3s eccentric'}),
-      ex('Élévations latérales',4,'10-15','1:30','1',{note:'lead elbow, pause 1s top'}),
-      ex('Rear delt cable fly',3,'12-15','1:30','1'),
-      ex('Curl pupitre',4,'10','1:30','1-2',{ssWithNext:true}),
-      ex('Overhead triceps',4,'10','1:30','1-2'),
-      ex('Curl allongé poulie basse',4,'10','1:30','1-2',{ssWithNext:true}),
-      ex('Triceps barre poulie haute',4,'10','1:30','1-2'),
-      ex('Reverse curl EZ',3,'10','1:30','1',{ssWithNext:true}),
-      ex('Hammer curl',3,'10','1:30','1')
-    ]},
-    {id:nid('s'),name:'Upper C',sub:'Chest/Back Volume',exercises:[
-      ex('Pull-ups (BW ou lestés)',4,'max (5-8)','2:30','0-1',{note:'FRESH first — hardest movement'}),
-      ex('Développé incliné haltères',3,'8-10','2:30','1-2',{note:'22 kg start'}),
-      ex('Tirage horizontal prise large',3,'10','2:30','1-2',{note:'order 3-4 flexible by machine'}),
-      ex('Écarté haltère pec',3,'10-12','1:30','1'),
-      ex('Pull-over cable',3,'12','1:30','1',{note:'light+slow, feel lat stretch; first cut if long'}),
-      ex('Face pulls',3,'12-15','1:30','1',{ssWithNext:true,note:'replaced shrug — rear delt + shoulder health'}),
-      ex('Élévations latérales',3,'12-15','1:30','1',{note:'8 kg strict'})
-    ]},
-    {id:nid('s'),name:'Lower B',sub:'Ham/Quad Accessories + Abs',exercises:[
-      ex('Hack squat',4,'10','2:30','1-2'),
-      ex('Leg curl allongé',3,'10','1:30','1'),
-      ex('Leg curl assis',2,'10','1:30','1'),
-      ex('Leg extension',3,'10-12','1:30','0-1'),
-      ...ABS()
-    ]}
-  ]};
-}
-const SCHEDULE={0:'Upper A',1:'Lower A',2:'Upper B',3:null,4:'Upper C',5:'Lower B',6:null};
-
-/* ---------------- App state ---------------- */
-const S={
-  tab:'entry',
-  health:[],            // sorted asc by date
-  workouts:[],          // sorted asc by date
-  program:null,
-  unsaved:0,
-  lastExport:null,
-  trainView:'home',     // home | edit
-  editSid:null,
-  log:null,             // active working session log
-  location:null         // last-used training location
-};
-const LOCATIONS=['Home','Basic Fit','ToTheLimitGym','Hotel','Other'];
-const $=q=>document.querySelector(q);
-
-/* ---------------- Data access ---------------- */
-function sortHealth(){S.health.sort((a,b)=>ddmmToDate(a.date)-ddmmToDate(b.date))}
-function sortWorkouts(){S.workouts.sort((a,b)=>ddmmToDate(a.date)-ddmmToDate(b.date))}
-async function loadAll(){
-  S.health=await idbGetAll('health');sortHealth();
-  S.workouts=await idbGetAll('workouts');sortWorkouts();
-  const pm=await idbGet('meta','program');
-  if(pm&&pm.v){S.program=pm.v}else{S.program=seedProgram();await idbPut('meta',{k:'program',v:S.program})}
-  const un=await idbGet('meta','unsaved');S.unsaved=un?un.v:0;
-  const le=await idbGet('meta','lastExport');S.lastExport=le?le.v:null;
-  const al=await idbGet('meta','activeLog');if(al&&al.v)S.log=al.v;
-  const lc=await idbGet('meta','lastLocation');S.location=lc&&lc.v?lc.v:LOCATIONS[0];
-  if(S.log&&Array.isArray(S.log.ex)){
-    S.log.location=S.log.location||S.location;
-    refreshLogReferences(S.log);
-  }
-}
-async function bumpUnsaved(n){S.unsaved+=(n==null?1:n);await idbPut('meta',{k:'unsaved',v:S.unsaved});renderBadge()}
-async function persistProgram(){await idbPut('meta',{k:'program',v:S.program});await bumpUnsaved()}
-let _alTm=null;
-function persistActiveLog(){clearTimeout(_alTm);_alTm=setTimeout(()=>{idbPut('meta',{k:'activeLog',v:S.log})},400)}
-async function clearActiveLog(){clearTimeout(_alTm);await idbPut('meta',{k:'activeLog',v:null});S.log=null}
-
-/* ---------------- Modal / toast ---------------- */
-function showModal(title,bodyHtml,buttons){
-  return new Promise(res=>{
-    const m=$('#modal');
-    m.innerHTML='<h2>'+esc(title)+'</h2><div class="body">'+bodyHtml+'</div>'+
-      '<div class="btns">'+buttons.map((b,i)=>'<button class="btn '+(b.cls||'')+'" data-mb="'+i+'">'+esc(b.txt)+'</button>').join('')+'</div>';
-    $('#ovl').classList.add('on');
-    m.querySelectorAll('[data-mb]').forEach(bt=>bt.onclick=()=>{$('#ovl').classList.remove('on');res(buttons[+bt.dataset.mb].val)});
-  });
-}
-function confirmM(title,body){return showModal(title,body,[{txt:'Cancel',cls:'ghost',val:false},{txt:'Confirm',cls:'primary',val:true}])}
-let _toTm=null;
-function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(_toTm);_toTm=setTimeout(()=>t.classList.remove('on'),2200)}
-
-/* =====================================================================
-   ENTRY TAB
-   ===================================================================== */
-function healthByDate(dm){return S.health.find(h=>h.date===dm)}
-function lastWeight(){for(let i=S.health.length-1;i>=0;i--){if(S.health[i].weight!=null)return S.health[i].weight}return null}
-
-function loadEntryForm(){
-  const iso=$('#entryDate').value||todayIso();
-  const rec=healthByDate(isoToDdmm(iso));
-  const hint=$('#dateHint');
-  if(rec){hint.textContent='📝 Date exists — editing';hint.className='hint-ok'}
-  else{hint.textContent='🆕 New date';hint.className='hint-new'}
-  const g=(v)=>v==null?'':String(v);
-  $('#inSteps').value=rec?g(rec.steps):'';
-  const sl=rec?rec.sleep_min:null;
-  $('#inSleepH').value=sl!=null?String(Math.floor(sl/60)):'';
-  $('#inSleepM').value=sl!=null?String(Math.round(sl%60)):'';
-  updateSleepHint();
-  $('#inWorkout').value=rec?g(rec.workout_duration_min_tot):'';
-  $('#inWeight').value=rec?g(rec.weight):(lastWeight()!=null?String(lastWeight()):'');
-  $('#inWaist').value=rec?g(rec.waist_cm):'';
-  $('#inBurned').value=rec?g(rec.calories_burned):'';
-  $('#inConsumed').value=rec?g(rec.calories_consumed):'';
-}
-function readSleepMin(){
-  const h=numOrNull($('#inSleepH').value),m=numOrNull($('#inSleepM').value);
-  if(h==null&&m==null)return null;
-  return (h||0)*60+(m||0);
-}
-function updateSleepHint(){
-  const v=readSleepMin();
-  $('#sleepHint').textContent=v==null?'':('= '+minToH(v)+' ('+v+' min)');
-}
-async function saveEntry(){
-  const iso=$('#entryDate').value;if(!iso){toast('Pick a date');return}
-  const dm=isoToDdmm(iso);
-  const rec={date:dm,
-    steps:numOrNull($('#inSteps').value),
-    sleep_min:readSleepMin(),
-    workout_duration_min_tot:numOrNull($('#inWorkout').value),
-    weight:numOrNull($('#inWeight').value),
-    calories_burned:numOrNull($('#inBurned').value),
-    calories_consumed:numOrNull($('#inConsumed').value),
-    waist_cm:numOrNull($('#inWaist').value)};
-  const old=healthByDate(dm);
-  if(old){
-    const fields=[['steps','Steps'],['sleep_min','Sleep'],['workout_duration_min_tot','Workout'],['weight','Weight'],['calories_burned','Burned'],['calories_consumed','Consumed'],['waist_cm','Waist']];
-    const diffs=fields.filter(([k])=>String(old[k]??'')!==String(rec[k]??''))
-      .map(([k,l])=>'<div class="diffline">'+l+': '+esc(old[k]??'—')+' → <b>'+esc(rec[k]??'—')+'</b></div>').join('');
-    if(diffs){const ok=await confirmM('Overwrite '+dm+'?',diffs||'');if(!ok)return}
-    else{toast('No changes');return}
-  }
-  await idbPut('health',rec);
-  const i=S.health.findIndex(h=>h.date===dm);
-  if(i>=0)S.health[i]=rec;else{S.health.push(rec);sortHealth()}
-  await bumpUnsaved();
-  loadEntryForm();renderRecent();
-  toast('Saved '+dm+' ✓');
-}
-function renderRecent(){
-  const el=$('#recentList');
-  const last=S.health.slice(-10).reverse();
-  if(!last.length){el.innerHTML='<div class="muted">No data yet — save your first day above.</div>';return}
-  el.innerHTML=last.map(h=>{
-    const vals=[];
-    if(h.weight!=null)vals.push(h.weight+' kg');
-    if(h.waist_cm!=null)vals.push('waist '+h.waist_cm);
-    if(h.sleep_min!=null)vals.push('😴 '+minToH(h.sleep_min));
-    if(h.steps!=null)vals.push('👣 '+Math.round(h.steps).toLocaleString());
-    if(h.calories_consumed!=null)vals.push('in '+Math.round(h.calories_consumed));
-    if(h.calories_burned!=null)vals.push('out '+Math.round(h.calories_burned));
-    return '<div class="r"><span class="d">'+h.date.slice(0,5)+'</span><span class="vals">'+vals.map(esc).join(' · ')+'</span>'+
-      '<button data-act="editDay" data-date="'+h.date+'">✎</button><button data-act="delDay" data-date="'+h.date+'">✕</button></div>';
-  }).join('');
-}
-async function delDay(dm){
-  const ok=await confirmM('Delete '+dm+'?','This removes the day from the phone app only (the Mac CSV is not touched).');
-  if(!ok)return;
-  await idbDel('health',dm);
-  S.health=S.health.filter(h=>h.date!==dm);
-  await bumpUnsaved();renderRecent();loadEntryForm();toast('Deleted '+dm);
-}
-
-/* =====================================================================
-   TRAIN TAB
-   ===================================================================== */
-function groupSS(list){
-  const groups=[];let cur=[];
-  list.forEach((e,i)=>{cur.push(i);if(!e.ssWithNext||i===list.length-1){groups.push(cur);cur=[]}});
-  if(cur.length)groups.push(cur);
-  return groups;
-}
-/* Location-aware previous-performance lookup.
-   Returns {sameLoc, recent}:
-     sameLoc = most recent session at `loc` that has this exercise (or null)
-     recent  = most recent session ANY location that has this exercise (or null)
-   Old records without a stored location count only toward `recent`. */
-function lastSessionsFor(name,loc){
-  const n=name.trim().toLowerCase();
-  let sameLoc=null,recent=null;
-  for(let i=S.workouts.length-1;i>=0;i--){
-    const w=S.workouts[i];
-    const e=(w.exercises||[]).find(x=>x.name.trim().toLowerCase()===n);
-    if(!(e&&e.sets&&e.sets.length))continue;
-    if(!recent)recent={date:w.date,sets:e.sets,location:w.location||null};
-    if(loc&&w.location===loc&&!sameLoc)sameLoc={date:w.date,sets:e.sets,location:w.location};
-    if(recent&&(sameLoc||!loc))break;
-  }
-  return {sameLoc,recent};
-}
-function refreshExerciseReferences(e,loc){
-  const refs=lastSessionsFor(e.name,loc);
-  e.sameLoc=refs.sameLoc;e.recent=refs.recent;
-  const baseSets=(refs.sameLoc&&refs.sameLoc.sets)||(refs.recent&&refs.recent.sets)||null;
-  e.sets.forEach((st,i)=>{
-    const p=baseSets?(baseSets[i]||baseSets[baseSets.length-1]):null;
-    st.prev=p?{weight:p.weight,reps:p.reps}:null;
-  });
-}
-function refreshLogReferences(log){log.ex.forEach(e=>refreshExerciseReferences(e,log.location))}
-function locationOptions(selected){
-  return LOCATIONS.map(l=>'<option'+(l===selected?' selected':'')+'>'+esc(l)+'</option>').join('');
-}
-function setTrainingLocation(loc){
-  if(!LOCATIONS.includes(loc))return;
-  S.location=loc;
-  idbPut('meta',{k:'lastLocation',v:loc});
-  if(S.log){
-    S.log.location=loc;
-    refreshLogReferences(S.log);
-    persistActiveLog();
-    renderTrain();
-  }
-}
-function fmtPrev(p){return (p&&p.weight!=null?p.weight:'?')+'×'+(p&&p.reps!=null?p.reps:'?')}
-function renderTrain(){
-  const root=$('#panel-train');
-  if(S.log){root.innerHTML=logHTML();return}
-  if(S.trainView==='edit'){root.innerHTML=editorHTML();return}
-  root.innerHTML=homeHTML();
-}
-function homeHTML(){
-  const today=SCHEDULE[new Date().getDay()];
-  const tSess=today?S.program.sessions.find(s=>s.name===today):null;
-  let h='<div class="card"><div class="row"><span class="muted small" style="flex:0 0 auto">📍 Location</span>'+
-    '<select data-home-loc="1">'+locationOptions(S.location)+'</select></div>'+
-    '<div class="muted small" style="margin-top:6px">Choose the gym before starting to see its previous weights.</div></div>';
-  if(tSess){
-    h+='<div class="today-chip"><div style="flex:1"><div class="muted small">📅 Today</div><div style="font-weight:700">'+esc(tSess.name)+' — '+esc(tSess.sub||'')+'</div></div>'+
-      '<button class="btn primary sm" data-act="startSession" data-sid="'+tSess.id+'">Start</button></div>';
-  }else if(today===null){
-    h+='<div class="today-chip"><div class="muted">📅 Today is a REST day (schedule: Sun UA · Mon LA · Tue UB · Wed rest · Thu UC · Fri LB · Sat rest)</div></div>';
-  }
-  h+=S.program.sessions.map(s=>{
-    return '<div class="card sess"><div class="info"><div class="nm">'+esc(s.name)+'</div><div class="muted small">'+esc(s.sub||'')+' · '+s.exercises.length+' exercises</div></div>'+
-    '<button class="btn sm" data-act="startSession" data-sid="'+s.id+'">▶ Start</button>'+
-    '<button class="iconbtn" data-act="editSession" data-sid="'+s.id+'">✎</button></div>';
-  }).join('');
-  h+='<button class="btn ghost" data-act="addSession">＋ New session</button>';
-  h+='<div class="muted small" style="margin-top:14px">📈 Per-exercise progress view: coming in a later version.</div>';
-  return h;
-}
-/* -------- session editor -------- */
-function editorHTML(){
-  const s=S.program.sessions.find(x=>x.id===S.editSid);
-  if(!s){S.trainView='home';return homeHTML()}
-  let h='<div class="card"><div class="row" style="align-items:center">'+
-    '<button class="iconbtn" data-act="editBack" style="flex:0 0 auto">←</button>'+
-    '<div style="flex:1"><div style="font-weight:700">'+esc(s.name)+'</div><div class="muted small">'+esc(s.sub||'')+'</div></div>'+
-    '<button class="btn sm ghost" data-act="renameSession" data-sid="'+s.id+'">Rename</button></div></div>';
-  h+='<div class="card" style="padding:4px 2px">';
-  h+=s.exercises.map((e,i)=>{
-    const link=e.ssWithNext?'⛓':'⛓';
-    return '<div class="exed">'+
-      '<div class="nm"><div>'+esc(e.name)+(e.ssWithNext?' <span class="chip" style="background:#141b2e;color:#8fa0f4">SS↓</span>':'')+'</div>'+
-      '<div class="tg">'+e.sets+'×'+esc(e.reps)+' · rest '+esc(e.rest)+(e.rir?' · RIR '+esc(e.rir):'')+'</div></div>'+
-      '<button data-act="exUp" data-sid="'+s.id+'" data-i="'+i+'">↑</button>'+
-      '<button data-act="exDown" data-sid="'+s.id+'" data-i="'+i+'">↓</button>'+
-      '<button data-act="exLink" data-sid="'+s.id+'" data-i="'+i+'" class="'+(e.ssWithNext?'linkon':'')+'" title="superset with next">'+link+'</button>'+
-      '<button data-act="exEdit" data-sid="'+s.id+'" data-i="'+i+'">✎</button>'+
-      '<button data-act="exDel" data-sid="'+s.id+'" data-i="'+i+'">✕</button>'+
-      '</div>';
-  }).join('');
-  h+='</div>';
-  h+='<button class="btn" data-act="exAdd" data-sid="'+s.id+'">＋ Add exercise</button>';
-  h+='<div style="height:10px"></div>';
-  h+='<button class="btn danger" data-act="delSession" data-sid="'+s.id+'">🗑 Delete session</button>';
-  return h;
-}
-function exFormHTML(e){
-  return '<label class="f">Name</label><input id="xf_name" value="'+esc(e.name)+'">'+
-  '<div class="grid2">'+
-  '<div><label class="f">Sets</label><input id="xf_sets" inputmode="numeric" value="'+esc(e.sets)+'"></div>'+
-  '<div><label class="f">Reps (range ok)</label><input id="xf_reps" value="'+esc(e.reps)+'"></div>'+
-  '<div><label class="f">Rest (m:ss)</label><input id="xf_rest" value="'+esc(e.rest)+'"></div>'+
-  '<div><label class="f">RIR</label><input id="xf_rir" value="'+esc(e.rir)+'"></div>'+
-  '</div>'+
-  '<label class="f">Default note (machine/gym)</label><input id="xf_note" value="'+esc(e.note||'')+'">';
-}
-function readExForm(){
-  return {name:$('#xf_name').value.trim()||'Exercise',
-    sets:Math.max(1,Math.round(numOrNull($('#xf_sets').value)||1)),
-    reps:$('#xf_reps').value.trim()||'10',
-    rest:$('#xf_rest').value.trim()||'1:30',
-    rir:$('#xf_rir').value.trim(),
-    note:$('#xf_note').value.trim()};
-}
-async function exEdit(sid,i){
-  const s=S.program.sessions.find(x=>x.id===sid);const e=s.exercises[i];
-  const ok=await showModal('Edit exercise',exFormHTML(e),[{txt:'Cancel',cls:'ghost',val:false},{txt:'Save',cls:'primary',val:true}]);
-  if(!ok)return;
-  Object.assign(e,readExForm());
-  await persistProgram();renderTrain();
-}
-async function exAdd(sid){
-  const s=S.program.sessions.find(x=>x.id===sid);
-  const blank=ex('',3,'10','1:30','');
-  const ok=await showModal('New exercise',exFormHTML(blank),[{txt:'Cancel',cls:'ghost',val:false},{txt:'Add',cls:'primary',val:true}]);
-  if(!ok)return;
-  Object.assign(blank,readExForm());
-  s.exercises.push(blank);
-  await persistProgram();renderTrain();
-}
-/* -------- logging -------- */
-async function startSession(sid){
-  const s=S.program.sessions.find(x=>x.id===sid);if(!s)return;
-  if(S.log){
-    const ok=await confirmM('A session draft is in progress','Starting "'+esc(s.name)+'" will discard the unfinished "'+esc(S.log.session)+'" draft. Continue?');
-    if(!ok)return;
-    await clearActiveLog();
-  }
-  const loc=S.location||LOCATIONS[0];
-  S.log={sid:s.id,session:s.name,dateISO:todayIso(),location:loc,
-    ex:s.exercises.map(e=>{
-      const sets=[];
-      for(let i=0;i<e.sets;i++){
-        sets.push({w:'',r:'',rir:'',done:false,prev:null});
-      }
-      return {name:e.name,target:e.sets+'×'+e.reps,rest:e.rest,rir:e.rir,ssWithNext:!!e.ssWithNext,note:e.note||'',sets,
-        sameLoc:null,recent:null};
-    })};
-  refreshLogReferences(S.log);
-  persistActiveLog();renderTrain();window.scrollTo(0,0);
-}
-function logHTML(){
-  const L=S.log;
-  let h='<div class="card"><div class="row" style="align-items:center">'+
-    '<div style="flex:1"><div style="font-weight:800">'+esc(L.session)+'</div><div class="muted small">in progress — auto-saved draft</div></div>'+
-    '<input type="date" value="'+esc(L.dateISO)+'" data-logdate="1" style="flex:0 0 150px"></div>'+
-    '<div class="row" style="margin-top:8px;align-items:center">'+
-    '<span class="muted small" style="flex:0 0 auto">📍 Location</span>'+
-    '<select data-loc="1" style="flex:1;background:#0f172a;color:#e5e9f0;border:1px solid #2a3550;border-radius:8px;padding:8px">'+
-      locationOptions(L.location)+
-    '</select></div>'+
-    '<div class="row" style="margin-top:10px">'+
-    '<button class="btn primary" data-act="finishSession">✓ Finish &amp; save</button>'+
-    '<button class="btn ghost" data-act="cancelSession">✕ Discard</button></div></div>';
-  const groups=groupSS(L.ex);
-  h+=groups.map(g=>{
-    const isSS=g.length>1;
-    let card='<div class="exgroup'+(isSS?' ss':'')+'">';
-    if(isSS)card+='<div class="ss-tag">⛓ SUPERSET — alternate, rest after the pair</div>';
-    card+=g.map(i=>{
-      const e=L.ex[i];
-      let x='<div class="ex"><div class="hd"><span class="nm">'+esc(e.name)+'</span>'+
-        '<span class="chip">'+esc(e.target)+'</span><span class="chip">rest '+esc(e.rest)+'</span>'+(e.rir?'<span class="chip">RIR '+esc(e.rir)+'</span>':'')+'</div>';
-      // primary reference: last time at THIS location
-      if(e.sameLoc&&e.sameLoc.sets&&e.sameLoc.sets.length){
-        x+='<div class="lastline">↩ Here'+(e.sameLoc.location?' ['+esc(e.sameLoc.location)+']':'')+(e.sameLoc.date?' '+esc(e.sameLoc.date.slice(0,5)):'')+': '+e.sameLoc.sets.map(fmtPrev).join(' · ')+'</div>';
-      }
-      // context reference: most recent ANY location (only if a different session than the sameLoc one)
-      if(e.recent&&e.recent.sets&&e.recent.sets.length){
-        const dup=e.sameLoc&&e.sameLoc.date===e.recent.date&&(e.sameLoc.location||null)===(e.recent.location||null);
-        if(!dup){
-          x+='<div class="lastline" style="opacity:.65">↔ Recent'+(e.recent.location?' ['+esc(e.recent.location)+']':'')+(e.recent.date?' '+esc(e.recent.date.slice(0,5)):'')+': '+e.recent.sets.map(fmtPrev).join(' · ')+'</div>';
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0f1115">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>YF Tracker</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0f1115;
+            --surface: #171a21;
+            --line: #303642;
+            --text: #e6e9ef;
+            --muted: #a4acbb;
+            --accent: #8492ff;
+            --action: #4c5bd4;
+            --green: #72d6af;
+            --amber: #e9bd72;
         }
-      }
-      x+=e.sets.map((st,j)=>
-        '<div class="setrow"><span class="sn">'+(j+1)+'</span>'+
-        '<input class="w" inputmode="decimal" placeholder="'+(st.prev&&st.prev.weight!=null?esc(String(st.prev.weight)):'kg')+'" value="'+esc(st.w)+'" data-lb="'+i+'.'+j+'.w">'+
-        '<span class="x">×</span>'+
-        '<input class="r" inputmode="numeric" placeholder="'+(st.prev&&st.prev.reps!=null?esc(String(st.prev.reps)):'reps')+'" value="'+esc(st.r)+'" data-lb="'+i+'.'+j+'.r">'+
-        '<input class="rr" inputmode="numeric" placeholder="RIR" value="'+esc(st.rir)+'" data-lb="'+i+'.'+j+'.rir">'+
-        '<button class="done'+(st.done?' on':'')+'" data-act="setDone" data-i="'+i+'" data-j="'+j+'">✓</button>'+
-        '<button class="del" data-act="setDel" data-i="'+i+'" data-j="'+j+'">–</button></div>'
-      ).join('');
-      x+='<div class="row" style="margin-top:6px"><button class="btn ghost sm" data-act="setAdd" data-i="'+i+'">＋ set</button>'+
-         '<div class="notein" style="flex:3"><input placeholder="note (machine/gym)" value="'+esc(e.note)+'" data-ln="'+i+'"></div></div>';
-      x+='</div>';
-      return x;
-    }).join('');
-    card+='</div>';
-    return card;
-  }).join('');
-  return h;
-}
-function setDone(i,j){
-  const st=S.log.ex[i].sets[j];st.done=!st.done;
-  persistActiveLog();
-  const btn=document.querySelector('[data-act="setDone"][data-i="'+i+'"][data-j="'+j+'"]');
-  if(btn)btn.classList.toggle('on',st.done);
-  if(st.done)startTimer(S.log.ex[i].rest,S.log.ex[i].name+' — set '+(j+1)+' done');
-}
-async function finishSession(){
-  const L=S.log;
-  const dm=isoToDdmm(L.dateISO);
-  const exercises=L.ex.map(e=>({
-    name:e.name,target:e.target,rest:e.rest,rir:e.rir,note:e.note||'',
-    sets:e.sets.filter(s=>s.r!=='').map(s=>{
-      const o={weight:numOrNull(s.w),reps:numOrNull(s.r)};
-      if(s.rir!=='')o.rir=numOrNull(s.rir);
-      return o;
-    })
-  })).filter(e=>e.sets.length>0);
-  if(!exercises.length){toast('Nothing logged yet');return}
-  const key=dm+'|'+L.session;
-  const existing=S.workouts.find(w=>w.key===key);
-  const body='<p>'+exercises.length+' exercises, '+exercises.reduce((a,e)=>a+e.sets.length,0)+' sets on '+dm+'.</p>'+
-    (existing?'<p><b>A log for this session/date exists — it will be replaced.</b></p>':'');
-  const ok=await confirmM('Save '+L.session+'?',body);
-  if(!ok)return;
-  const rec={key,date:dm,session:L.session,location:L.location||null,exercises};
-  await idbPut('workouts',rec);
-  const ix=S.workouts.findIndex(w=>w.key===key);
-  if(ix>=0)S.workouts[ix]=rec;else{S.workouts.push(rec);sortWorkouts()}
-  if(L.location){S.location=L.location;await idbPut('meta',{k:'lastLocation',v:L.location})}
-  await clearActiveLog();
-  await bumpUnsaved();
-  S.trainView='home';renderTrain();
-  toast('Session saved ✓');
-}
-async function cancelSession(){
-  const ok=await confirmM('Discard this session draft?','Logged values in this draft will be lost.');
-  if(!ok)return;
-  await clearActiveLog();S.trainView='home';renderTrain();
-}
-/* -------- rest timer -------- */
-const T={int:null,end:0};
-function restToSec(r){
-  if(!r)return 90;
-  const m1=/^(\d+):(\d{1,2})$/.exec(r.trim());if(m1)return(+m1[1])*60+(+m1[2]);
-  const m2=/^(\d+)\s*s$/i.exec(r.trim());if(m2)return +m2[1];
-  const n=parseInt(r,10);if(!isNaN(n))return n>=20?n:n*60;
-  return 90;
-}
-function startTimer(rest,label){
-  const sec=restToSec(rest);
-  T.end=Date.now()+sec*1000;
-  $('#rtLabel').textContent=label+' — rest '+rest;
-  $('#restTimer').classList.add('on');$('#restTimer').classList.remove('flash');
-  clearInterval(T.int);
-  T.int=setInterval(()=>{
-    const left=Math.round((T.end-Date.now())/1000);
-    if(left<=0){
-      $('#rtTime').textContent='0:00';
-      clearInterval(T.int);
-      $('#restTimer').classList.add('flash');
-      if(navigator.vibrate)navigator.vibrate([200,100,200]);
-      setTimeout(()=>$('#restTimer').classList.remove('on'),2500);
-    }else{
-      $('#rtTime').textContent=Math.floor(left/60)+':'+pad(left%60);
-    }
-  },250);
-  $('#rtTime').textContent=Math.floor(sec/60)+':'+pad(sec%60);
-}
-function timerClose(){clearInterval(T.int);$('#restTimer').classList.remove('on')}
 
-/* =====================================================================
-   TRENDS TAB
-   ===================================================================== */
-function filteredHealth(){
-  const p=$('#selPeriod').value;
-  if(!S.health.length)return[];
-  if(p==='all')return S.health.slice();
-  const days=+p;
-  const end=new Date();end.setHours(0,0,0,0);
-  const start=new Date(end);start.setDate(start.getDate()-days);
-  return S.health.filter(h=>{const d=ddmmToDate(h.date);return d>=start&&d<=end});
-}
-function mean(a){const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null}
-function sum(a){const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0):null}
-function weeklyGain(rows){
-  // least-squares slope over last <=7 days of weight, in kg/week
-  const end=rows.length?ddmmToDate(rows[rows.length-1].date):null;
-  if(!end)return null;
-  const lim=new Date(end);lim.setDate(lim.getDate()-6);
-  const pts=rows.filter(r=>r.weight!=null&&ddmmToDate(r.date)>=lim)
-    .map(r=>({x:ddmmToDate(r.date).getTime()/86400000,y:r.weight}));
-  if(pts.length<2)return null;
-  const mx=mean(pts.map(p=>p.x)),my=mean(pts.map(p=>p.y));
-  let num=0,den=0;
-  pts.forEach(p=>{num+=(p.x-mx)*(p.y-my);den+=(p.x-mx)*(p.x-mx)});
-  if(den===0)return null;
-  return num/den*7;
-}
-function thColor(v,greens,ambers){
-  if(v==null||isNaN(v))return'neutral';
-  for(const[lo,hi]of greens)if(v>=lo&&v<=hi)return'green';
-  for(const[lo,hi]of ambers)if(v>=lo&&v<=hi)return'amber';
-  return'red';
-}
-function aggregate(rows,mode){
-  if(mode==='daily')return rows.map(r=>({x:ddmmToDate(r.date),...r}));
-  const buckets=new Map();
-  rows.forEach(r=>{
-    const d=ddmmToDate(r.date);let k,xd;
-    if(mode==='weekly'){
-      const dow=d.getDay();               // week ending Sunday (mirror resample('W'))
-      const endS=new Date(d);endS.setDate(d.getDate()+((7-dow)%7));
-      k=endS.toISOString().slice(0,10);xd=endS;
-    }else{
-      xd=new Date(d.getFullYear(),d.getMonth()+1,0);
-      k=d.getFullYear()+'-'+pad(d.getMonth()+1);
-    }
-    if(!buckets.has(k))buckets.set(k,{x:xd,rows:[]});
-    buckets.get(k).rows.push(r);
-  });
-  return[...buckets.values()].sort((a,b)=>a.x-b.x).map(b=>({
-    x:b.x,
-    steps:sum(b.rows.map(r=>r.steps)),
-    sleep_min:mean(b.rows.map(r=>r.sleep_min)),
-    workout_duration_min_tot:sum(b.rows.map(r=>r.workout_duration_min_tot)),
-    weight:mean(b.rows.map(r=>r.weight)),
-    calories_burned:sum(b.rows.map(r=>r.calories_burned)),
-    calories_consumed:sum(b.rows.map(r=>r.calories_consumed)),
-    waist_cm:mean(b.rows.map(r=>r.waist_cm))
-  }));
-}
-function movingAvg(pts,n){
-  // pts: [{x, y|null}] -> full-window rolling mean over points with values
-  const out=[];
-  for(let i=0;i<pts.length;i++){
-    const win=pts.slice(Math.max(0,i-n+1),i+1).map(p=>p.y).filter(v=>v!=null);
-    out.push({x:pts[i].x,y:(i>=n-1&&win.length===n)?win.reduce((a,b)=>a+b,0)/n:null});
-  }
-  return out;
-}
-function renderTrends(){
-  const rows=filteredHealth();
-  const info=$('#periodInfo');
-  if(!rows.length){
-    info.textContent='No data in selected range.';
-    $('#kpiGrid').innerHTML='';$('#chartsWrap').innerHTML='<div class="card muted">No data available. Add records in the Entry tab.</div>';
-    return;
-  }
-  const d0=ddmmToDate(rows[0].date),d1=ddmmToDate(rows[rows.length-1].date);
-  info.textContent='📊 '+fmtShort(d0)+' → '+fmtShort(d1)+' ('+rows.length+' days of data)';
-  // ---- KPIs on daily rows (mirror Streamlit) ----
-  const lw=(()=>{for(let i=rows.length-1;i>=0;i--)if(rows[i].weight!=null)return rows[i].weight;return null})();
-  const wg=weeklyGain(rows);
-  const sur=mean(rows.filter(r=>r.calories_consumed!=null&&r.calories_burned!=null).map(r=>r.calories_consumed-r.calories_burned));
-  const slp=mean(rows.map(r=>r.sleep_min));const slpH=slp!=null?slp/60:null;
-  const stp=mean(rows.map(r=>r.steps));
-  const wk=mean(rows.map(r=>r.workout_duration_min_tot));
-  const cards=[
-    ['Current Weight',lw!=null?lw.toFixed(1):'N/A','kg','neutral'],
-    ['Weekly Gain',wg!=null?(wg>=0?'+':'')+wg.toFixed(2):'N/A','kg/week',thColor(wg,[[0.20,0.50]],[[0.10,0.20],[0.50,0.70]])],
-    ['Daily Surplus',sur!=null?(sur>=0?'+':'')+sur.toFixed(0):'N/A','kcal',thColor(sur,[[200,600]],[[100,200],[600,900]])],
-    ['Avg Sleep',slpH!=null?slpH.toFixed(1):'N/A','hours',thColor(slpH,[[7.5,99]],[[7.0,7.5]])],
-    ['Avg Steps',stp!=null?Math.round(stp).toLocaleString():'N/A','steps/day',thColor(stp,[[8000,1e9]],[[5000,8000]])],
-    ['Avg Workout',wk!=null?wk.toFixed(0):'N/A','min/day',thColor(wk,[[60,1e9]],[[30,60]])]
-  ];
-  $('#kpiGrid').innerHTML=cards.map(([l,v,u,c])=>'<div class="kpi '+c+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u">'+u+'</div></div>').join('');
-  // ---- charts ----
-  const mode=$('#selAgg').value;
-  const ag=aggregate(rows,mode);
-  const P=(k)=>ag.map(r=>({x:r.x,y:r[k]==null?null:r[k]}));
-  const daily=mode==='daily';
-  const charts=[
-    {t:'⚖️ Weight'+(daily?' + MA7':''),legend:[['#667eea','weight'],...(daily?[['#f59e0b','MA7']]:[])],
-     series:[{type:'line',color:'#667eea',data:P('weight')},...(daily?[{type:'line',color:'#f59e0b',dash:[5,4],data:movingAvg(P('weight'),7)}]:[])]},
-    {t:'🔥 Energy balance',legend:[['#10b981','consumed'],['#ef4444','burned']],
-     series:[{type:'line',color:'#10b981',data:P('calories_consumed')},{type:'line',color:'#ef4444',data:P('calories_burned')}]},
-    {t:'👣 Steps + workout min',legend:[['#3b4f8f','steps'],['#f59e0b','workout (right)']],
-     series:[{type:'bar',color:'#3b4f8f',data:P('steps')},{type:'line',color:'#f59e0b',axis:'y2',data:P('workout_duration_min_tot')}]},
-    {t:'😴 Sleep (min)',legend:[['#8b5cf6','sleep'],['#565e6e','8h line']],
-     series:[{type:'line',color:'#8b5cf6',data:P('sleep_min')}],ref:[{y:480,color:'#565e6e'}]},
-    {t:'📏 Waist'+(daily?' + MA14':''),legend:[['#10b981','waist'],...(daily?[['#f59e0b','MA14']]:[])],
-     series:[{type:'line',color:'#10b981',data:P('waist_cm')},...(daily?[{type:'line',color:'#f59e0b',dash:[5,4],data:movingAvg(P('waist_cm'),14)}]:[])]}
-  ];
-  $('#chartsWrap').innerHTML=charts.map((c,i)=>
-    '<div class="card"><h3 style="margin-bottom:4px">'+c.t+'</h3>'+
-    '<div class="legend">'+c.legend.map(([col,lb])=>'<span class="lg"><span class="dot" style="background:'+col+'"></span>'+lb+'</span>').join('')+'</div>'+
-    '<canvas id="cv'+i+'" height="190"></canvas></div>').join('');
-  charts.forEach((c,i)=>drawChart('cv'+i,c.series,c.ref||[]));
-}
-function drawChart(id,series,refs){
-  const cv=document.getElementById(id);if(!cv)return;
-  const W=cv.parentElement.clientWidth-28,H=190,dpr=window.devicePixelRatio||1;
-  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
-  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
-  const hasY2=series.some(s=>s.axis==='y2');
-  const L=46,R=hasY2?42:8,Tp=8,B=20,pw=W-L-R,ph=H-Tp-B;
-  const xs=[...new Set(series.flatMap(s=>s.data.map(p=>+p.x)))].sort((a,b)=>a-b);
-  if(!xs.length)return;
-  const x0=xs[0],x1=xs[xs.length-1]||x0+1;
-  const X=v=>xs.length===1?L+pw/2:L+(v-x0)/(x1-x0)*pw;
-  function yDomain(list){
-    const vals=list.flatMap(s=>s.data.map(p=>p.y).filter(v=>v!=null));
-    refs.forEach(r=>{if(!list.some(s=>s.axis==='y2'))vals.push(r.y)});
-    if(!vals.length)return[0,1];
-    let lo=Math.min(...vals),hi=Math.max(...vals);
-    if(lo===hi){lo-=1;hi+=1}
-    const p=(hi-lo)*0.12;return[lo-p,hi+p];
-  }
-  const y1s=series.filter(s=>s.axis!=='y2'),y2s=series.filter(s=>s.axis==='y2');
-  const[l1,h1]=yDomain(y1s),[l2,h2]=y2s.length?yDomain(y2s):[0,1];
-  const Y1=v=>Tp+ph-(v-l1)/(h1-l1)*ph;
-  const Y2=v=>Tp+ph-(v-l2)/(h2-l2)*ph;
-  // grid + y labels
-  c.font='10px -apple-system,sans-serif';c.textAlign='right';c.textBaseline='middle';
-  c.strokeStyle='#232834';c.fillStyle='#6b7280';c.lineWidth=1;
-  for(let i=0;i<=3;i++){
-    const v=l1+(h1-l1)*i/3,y=Y1(v);
-    c.beginPath();c.moveTo(L,y);c.lineTo(W-R,y);c.stroke();
-    c.fillText(v>=1000?Math.round(v).toLocaleString():(Math.round(v*10)/10),L-6,y);
-  }
-  if(y2s.length){c.textAlign='left';c.fillStyle=y2s[0].color;
-    for(let i=0;i<=3;i++){const v=l2+(h2-l2)*i/3;c.fillText(Math.round(v),W-R+6,Y2(v))}}
-  // x labels (≈4)
-  c.textAlign='center';c.textBaseline='top';c.fillStyle='#6b7280';
-  const step=Math.max(1,Math.ceil(xs.length/4));
-  for(let i=0;i<xs.length;i+=step){const d=new Date(xs[i]);c.fillText(fmtShort(d),X(xs[i]),H-B+5)}
-  // ref lines
-  refs.forEach(r=>{c.strokeStyle=r.color;c.setLineDash([4,4]);c.beginPath();c.moveTo(L,Y1(r.y));c.lineTo(W-R,Y1(r.y));c.stroke();c.setLineDash([])});
-  // bars first
-  series.filter(s=>s.type==='bar').forEach(s=>{
-    const Y=s.axis==='y2'?Y2:Y1,base=s.axis==='y2'?Y2(Math.max(0,l2)):Y1(Math.max(0,l1));
-    const bw=Math.max(2,pw/Math.max(1,xs.length)*0.6);
-    c.fillStyle=s.color;
-    s.data.forEach(p=>{if(p.y==null)return;const x=X(+p.x);c.fillRect(x-bw/2,Y(p.y),bw,Math.max(1,base-Y(p.y)))});
-  });
-  // lines
-  series.filter(s=>s.type!=='bar').forEach(s=>{
-    const Y=s.axis==='y2'?Y2:Y1;
-    c.strokeStyle=s.color;c.lineWidth=2;c.setLineDash(s.dash||[]);
-    c.beginPath();let pen=false;
-    s.data.forEach(p=>{
-      if(p.y==null){pen=false;return}
-      const x=X(+p.x),y=Y(p.y);
-      if(!pen){c.moveTo(x,y);pen=true}else c.lineTo(x,y);
-    });
-    c.stroke();c.setLineDash([]);
-    // dots for sparse data
-    if(s.data.filter(p=>p.y!=null).length<=40){
-      c.fillStyle=s.color;
-      s.data.forEach(p=>{if(p.y==null)return;c.beginPath();c.arc(X(+p.x),Y(p.y),2.2,0,7);c.fill()});
-    }
-  });
-}
+        * {
+            box-sizing: border-box;
+        }
 
-/* =====================================================================
-   SYNC: export / import
-   ===================================================================== */
-function buildExport(){
-  return {app:'yf-tracker',version:1,exported_at:new Date().toISOString(),
-    health:S.health.map(h=>({...h})),
-    workouts:S.workouts.map(w=>({date:w.date,session:w.session,location:w.location||null,exercises:w.exercises})),
-    program:S.program};
-}
-function exportName(){const t=new Date();return'yf-tracker-export-'+t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate())+'.json'}
-async function markExported(){
-  S.unsaved=0;S.lastExport=new Date().toISOString();
-  await idbPut('meta',{k:'unsaved',v:0});await idbPut('meta',{k:'lastExport',v:S.lastExport});
-  renderBadge();
-}
-async function doExport(share){
-  const blob=new Blob([JSON.stringify(buildExport(),null,1)],{type:'application/json'});
-  const file=new File([blob],exportName(),{type:'application/json'});
-  if(share&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-    try{await navigator.share({files:[file],title:'YF Tracker export'});await markExported();toast('Exported ✓')}
-    catch(e){/* user cancelled — keep unsaved counter */}
-    return;
-  }
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=exportName();
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  await markExported();toast('Export downloaded ✓');
-}
-function healthCsv(){
-  const H='user_id,date,steps,sleep_min,workout_duration_min_tot,weight,calories_burned,calories_consumed,waist_cm';
-  const lines=S.health.map(h=>[
-    '',h.date,csvCell(h.steps),csvCell(h.sleep_min),csvCell(h.workout_duration_min_tot),
-    csvCell(h.weight),csvCell(h.calories_burned),csvCell(h.calories_consumed),csvCell(h.waist_cm)
-  ].join(','));
-  return H+'\n'+lines.join('\n')+'\n';
-}
-async function doCsv(){
-  const blob=new Blob([healthCsv()],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='yf-health-'+todayIso()+'.csv';
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  toast('CSV downloaded ✓');
-}
-async function doImport(file){
-  let j;
-  try{j=JSON.parse(await file.text())}catch(e){toast('Not a valid JSON file');return}
-  if(!j||j.app!=='yf-tracker'||!Array.isArray(j.health)||!Array.isArray(j.workouts)){toast('Not a yf-tracker export');return}
-  const ok=await confirmM('Import export?',
-    '<p>'+j.health.length+' health days, '+j.workouts.length+' workouts'+(j.program?', + program config':'')+'.</p>'+
-    '<p>Existing entries with the same date are updated field-by-field; nothing is deleted.</p>');
-  if(!ok)return;
-  let n=0;
-  for(const rec of j.health){
-    if(!rec||!rec.date)continue;
-    const old=healthByDate(rec.date)||{date:rec.date};
-    const merged={...old};
-    ['steps','sleep_min','workout_duration_min_tot','weight','calories_burned','calories_consumed','waist_cm']
-      .forEach(k=>{if(rec[k]!=null)merged[k]=rec[k];else if(merged[k]===undefined)merged[k]=null});
-    await idbPut('health',merged);
-    const i=S.health.findIndex(h=>h.date===rec.date);
-    if(i>=0)S.health[i]=merged;else S.health.push(merged);
-    n++;
-  }
-  sortHealth();
-  for(const w of j.workouts){
-    if(!w||!w.date||!w.session)continue;
-    const rec={key:w.date+'|'+w.session,date:w.date,session:w.session,location:w.location||null,exercises:w.exercises||[]};
-    await idbPut('workouts',rec);
-    const i=S.workouts.findIndex(x=>x.key===rec.key);
-    if(i>=0)S.workouts[i]=rec;else S.workouts.push(rec);
-    n++;
-  }
-  sortWorkouts();
-  if(j.program&&j.program.sessions){S.program=j.program;await idbPut('meta',{k:'program',v:S.program})}
-  renderVersion();
-  await bumpUnsaved(n);
-  loadEntryForm();renderRecent();renderTrain();if(S.tab==='trends')renderTrends();
-  toast('Imported '+n+' records ✓');
-}
-function syncPanel(){
-  const le=S.lastExport?new Date(S.lastExport).toLocaleString():'never';
-  showModal('📤 Sync',
-    '<p><b>'+S.unsaved+'</b> change(s) since last export. Last export: '+esc(le)+'.</p>'+
-    '<p class="muted small">Export the JSON to Files → iCloud Drive (folder <code>yf-tracker</code>). On the Mac, Claude merges it into the CSVs with <code>scripts/merge_tracker_export.py</code>.</p>'+
-    '<div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">'+
-    '<button class="btn primary" data-act="expShare">📤 Export JSON (share…)</button>'+
-    '<button class="btn" data-act="expDown">⬇️ Download JSON</button>'+
-    '<button class="btn" data-act="expCsv">⬇️ Health CSV (convenience)</button>'+
-    '<button class="btn ghost" data-act="impBtn">📥 Import a previous export</button></div>',
-    [{txt:'Close',cls:'ghost',val:false}]);
-}
-/* =====================================================================
-   HELP
-   ===================================================================== */
-function helpPanel(){
-  showModal('ⓘ YF Tracker — help',
-  '<p><b>Install on iPhone (once)</b></p>'+
-  '<ol>'+
-  '<li><b>Recommended:</b> on the Mac, from the repo folder run <code>python3 -m http.server 8000</code>, then on the iPhone (same WiFi) open Safari at <code>http://&lt;mac-ip&gt;:8000/mobile_tracker/index.html</code>.</li>'+
-  '<li>Tap <b>Share → Add to Home Screen</b>. You get an app icon that opens fullscreen.</li>'+
-  '<li>Alternative: put this file in iCloud Drive and open it from the Files app (preview works, but home-screen install via the LAN path is the reliable one).</li>'+
-  '</ol>'+
-  '<p><b>⚠️ Offline reality (iOS):</b> a home-screen icon created from a LAN address may need that address reachable at launch. Practical tips: open the app in the morning at home (it stays loaded through the day), and at the gym prefer the already-open app. If it ever fails to load with no network, open the file from iCloud Files, log there, and Export immediately.</p>'+
-  '<p><b>Daily use:</b> log your day in Entry, log workouts in Train. Everything is stored on-device instantly (IndexedDB).</p>'+
-  '<p><b>Sync:</b> tap 📤 → Export JSON → Save to Files → iCloud Drive → <code>yf-tracker</code> folder. On the Mac, the merge script folds it into <code>data/health_data.csv</code> + <code>data/training_log.csv</code>.</p>'+
-  '<p><b>⚠️ Persistence:</b> iOS can clear this app\'s local data after ~7 days of NOT opening it. You use it daily so this is unlikely — but the <b>Export is also your backup</b>. Export regularly; <b>Import</b> restores everything on a new phone or after eviction.</p>'+
-  '<p class="muted small">'+APP_VERSION+' · program '+esc(S.program.name||'custom')+' · distinct gym baselines · single-file offline app · no network calls</p>',
-  [{txt:'Close',cls:'primary',val:true}]);
-}
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            letter-spacing: 0;
+        }
 
-/* =====================================================================
-   Render / events / init
-   ===================================================================== */
-function renderBadge(){
-  const b=$('#unsavedBadge');
-  b.textContent='● '+S.unsaved+' unsaved';
-  b.classList.toggle('dirty',S.unsaved>0);
-}
-function renderVersion(){
-  $('#versionLabel').textContent=APP_VERSION+' · program '+(S.program.name||'custom');
-}
-function setTab(t){
-  S.tab=t;
-  document.querySelectorAll('section.panel').forEach(p=>p.classList.toggle('on',p.id==='panel-'+t));
-  document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-  if(t==='trends')renderTrends();
-  if(t==='train')renderTrain();
-}
-/* -------- delegated events -------- */
-document.addEventListener('click',async e=>{
-  const t=e.target.closest('[data-act]');if(!t)return;
-  const a=t.dataset.act;
-  if(a==='tab')setTab(t.dataset.tab);
-  else if(a==='saveEntry')saveEntry();
-  else if(a==='editDay'){$('#entryDate').value=ddmmToIso(t.dataset.date);loadEntryForm();window.scrollTo(0,0)}
-  else if(a==='delDay')delDay(t.dataset.date);
-  else if(a==='help')helpPanel();
-  else if(a==='sync')syncPanel();
-  else if(a==='reloadApp')location.reload();
-  else if(a==='expShare'){$('#ovl').classList.remove('on');doExport(true)}
-  else if(a==='expDown'){$('#ovl').classList.remove('on');doExport(false)}
-  else if(a==='expCsv'){$('#ovl').classList.remove('on');doCsv()}
-  else if(a==='impBtn'){$('#ovl').classList.remove('on');$('#fileImport').click()}
-  else if(a==='startSession')startSession(t.dataset.sid);
-  else if(a==='editSession'){S.trainView='edit';S.editSid=t.dataset.sid;renderTrain()}
-  else if(a==='editBack'){S.trainView='home';renderTrain()}
-  else if(a==='addSession'){
-    const s={id:nid('s'),name:'New session',sub:'',exercises:[]};
-    S.program.sessions.push(s);await persistProgram();
-    S.trainView='edit';S.editSid=s.id;renderTrain();
-  }
-  else if(a==='renameSession'){
-    const s=S.program.sessions.find(x=>x.id===t.dataset.sid);
-    const ok=await showModal('Rename session',
-      '<label class="f">Name</label><input id="xf_sname" value="'+esc(s.name)+'">'+
-      '<label class="f">Subtitle</label><input id="xf_ssub" value="'+esc(s.sub||'')+'">',
-      [{txt:'Cancel',cls:'ghost',val:false},{txt:'Save',cls:'primary',val:true}]);
-    if(ok){s.name=$('#xf_sname').value.trim()||s.name;s.sub=$('#xf_ssub').value.trim();await persistProgram();renderTrain()}
-  }
-  else if(a==='delSession'){
-    const s=S.program.sessions.find(x=>x.id===t.dataset.sid);
-    const ok=await confirmM('Delete "'+s.name+'"?','The session template is removed. Past logged workouts are kept.');
-    if(ok){S.program.sessions=S.program.sessions.filter(x=>x.id!==s.id);await persistProgram();S.trainView='home';renderTrain()}
-  }
-  else if(a==='exUp'||a==='exDown'){
-    const s=S.program.sessions.find(x=>x.id===t.dataset.sid);const i=+t.dataset.i;
-    const j=a==='exUp'?i-1:i+1;
-    if(j<0||j>=s.exercises.length)return;
-    [s.exercises[i],s.exercises[j]]=[s.exercises[j],s.exercises[i]];
-    await persistProgram();renderTrain();
-  }
-  else if(a==='exLink'){
-    const s=S.program.sessions.find(x=>x.id===t.dataset.sid);const i=+t.dataset.i;
-    if(i>=s.exercises.length-1){toast('No next exercise to pair with');return}
-    s.exercises[i].ssWithNext=!s.exercises[i].ssWithNext;
-    await persistProgram();renderTrain();
-  }
-  else if(a==='exEdit')exEdit(t.dataset.sid,+t.dataset.i);
-  else if(a==='exDel'){
-    const s=S.program.sessions.find(x=>x.id===t.dataset.sid);const i=+t.dataset.i;
-    const ok=await confirmM('Remove "'+s.exercises[i].name+'"?','');
-    if(ok){s.exercises.splice(i,1);await persistProgram();renderTrain()}
-  }
-  else if(a==='exAdd')exAdd(t.dataset.sid);
-  else if(a==='finishSession')finishSession();
-  else if(a==='cancelSession')cancelSession();
-  else if(a==='setDone')setDone(+t.dataset.i,+t.dataset.j);
-  else if(a==='setDel'){
-    const i=+t.dataset.i,j=+t.dataset.j;
-    S.log.ex[i].sets.splice(j,1);persistActiveLog();renderTrain();
-  }
-  else if(a==='setAdd'){
-    const i=+t.dataset.i;const sets=S.log.ex[i].sets;const p=sets[sets.length-1];
-    sets.push({w:'',r:'',rir:'',done:false,prev:p&&p.prev?p.prev:null});
-    persistActiveLog();renderTrain();
-  }
-  else if(a==='timerClose')timerClose();
-});
-document.addEventListener('input',e=>{
-  const el=e.target;
-  if(el.id==='inSleepH'||el.id==='inSleepM')updateSleepHint();
-  if(el.dataset.lb){                    // log set binding: "i.j.field"
-    const[i,j,f]=el.dataset.lb.split('.');
-    S.log.ex[+i].sets[+j][f]=el.value;
-    persistActiveLog();
-  }
-  if(el.dataset.ln!==undefined){S.log.ex[+el.dataset.ln].note=el.value;persistActiveLog()}
-});
-document.addEventListener('change',e=>{
-  const el=e.target;
-  if(el.id==='entryDate')loadEntryForm();
-  if(el.dataset.logdate){S.log.dateISO=el.value;persistActiveLog()}
-  if(el.dataset.homeLoc)setTrainingLocation(el.value);
-  if(el.dataset.loc&&S.log)setTrainingLocation(el.value);
-  if(el.id==='selPeriod'||el.id==='selAgg')renderTrends();
-  if(el.id==='fileImport'&&el.files&&el.files[0]){doImport(el.files[0]);el.value=''}
-});
-let _rzTm=null;
-window.addEventListener('resize',()=>{clearTimeout(_rzTm);_rzTm=setTimeout(()=>{if(S.tab==='trends')renderTrends()},200)});
+        button,
+        input,
+        select {
+            font: inherit;
+            letter-spacing: 0;
+        }
 
-/* -------- init -------- */
-(async function init(){
-  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
-  if('serviceWorker' in navigator){
-    // A new service worker takes over after install; offer a reload instead of forcing one mid-entry.
-    const hadController=!!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController)$('#updateBar').classList.add('on')});
-    navigator.serviceWorker.register('sw.js').then(reg=>{
-      // iOS keeps the app suspended, so check for a new version each time it returns to the foreground.
-      document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update().catch(()=>{})});
-    }).catch(function(){});
-  }
-  await openDB();
-  await loadAll();
-  renderVersion();
-  $('#entryDate').value=todayIso();
-  loadEntryForm();renderRecent();renderBadge();
-  if(S.log){setTab('train')}   // resume in-progress session draft
-})();
-</script>
+        button {
+            cursor: pointer;
+            color: inherit;
+        }
+
+        button:disabled {
+            cursor: default;
+            opacity: .5;
+        }
+
+        input,
+        select {
+            width: 100%;
+            min-height: 44px;
+            background: #11141a;
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 9px 10px;
+            caret-color: var(--accent);
+        }
+
+        input::placeholder {
+            color: #9ba4b5;
+            opacity: 1;
+        }
+
+        input:disabled {
+            opacity: .75;
+        }
+
+        input[aria-invalid="true"] {
+            border-color: #e89191;
+        }
+
+        input[type="number"] {
+            appearance: textfield;
+            -moz-appearance: textfield;
+        }
+
+        input::-webkit-inner-spin-button {
+            appearance: none;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        ::selection {
+            background: #4c5bd4;
+            color: white;
+        }
+
+        * {
+            scrollbar-color: #50596b var(--bg);
+            scrollbar-width: thin;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 750;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        h3 {
+            font-size: 15px;
+            font-weight: 650;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .small {
+            font-size: 12px;
+        }
+
+        .icon {
+            width: 19px;
+            height: 19px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: transparent;
+            flex-shrink: 0;
+        }
+
+        .icon-button:hover {
+            background: #252b36;
+        }
+
+        .icon-button.active {
+            background: #173b30;
+            border-color: #4b9e7d;
+            color: var(--green);
+        }
+
+        .command {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            border: 1px solid #6877ec;
+            border-radius: 6px;
+            padding: 10px 16px;
+            background: var(--action);
+            color: white;
+            font-weight: 650;
+        }
+
+        .command:hover {
+            background: #5969e5;
+        }
+
+        .command.secondary {
+            background: transparent;
+            border-color: var(--line);
+            color: var(--text);
+        }
+
+        .page-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg);
+            border-bottom: 1px solid #262b35;
+        }
+
+        .header-inner {
+            max-width: 800px;
+            margin: auto;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+        }
+
+        .brand-name {
+            font-size: 16px;
+            font-weight: 750;
+        }
+
+        .update-bar {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            top: calc(env(safe-area-inset-top) + 8px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+        }
+
+        .update-bar[hidden] {
+            display: none;
+        }
+
+        .update-bar span {
+            flex: 1;
+        }
+
+        .concept {
+            margin-left: auto;
+            color: var(--muted);
+            text-align: right;
+            font-size: 12px;
+        }
+
+        main {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px 18px 170px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        label.field {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .workout-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .workout-heading .muted {
+            margin-top: 5px;
+            font-size: 13px;
+        }
+
+        .group-heading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 650;
+            color: var(--muted);
+            margin: 23px 0 10px;
+        }
+
+        .group-heading::after {
+            content: "";
+            flex: 1;
+            border-top: 1px solid #262c36;
+        }
+
+        .pair-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .pair-tabs button {
+            min-height: 44px;
+            min-width: 0;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .pair-tabs button[aria-selected="true"] {
+            background: #232838;
+            color: var(--text);
+            border-color: var(--accent);
+        }
+
+        .guidance {
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 12px;
+        }
+
+        .availability {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .availability .text-command {
+            text-align: left;
+        }
+
+        .exercise {
+            padding: 15px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            margin-bottom: 12px;
+        }
+
+        .exercise-heading {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .exercise-name {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .target {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .exercise-tools {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .equipment-line {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 12px;
+            margin: 13px 0 8px;
+        }
+
+        .equipment-line .icon {
+            width: 15px;
+            height: 15px;
+        }
+
+        .convention-warning {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 8px 0;
+            color: var(--amber);
+            font-size: 12px;
+        }
+
+        .text-command {
+            min-height: 44px;
+            background: transparent;
+            border: 0;
+            padding: 6px 0;
+            color: var(--accent);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .reference {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 10px 0;
+            border-top: 1px solid #292f3a;
+            border-bottom: 1px solid #292f3a;
+            margin-bottom: 12px;
+        }
+
+        .reference-values {
+            font-size: 14px;
+            font-weight: 650;
+            font-variant-numeric: tabular-nums;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .reference-meta {
+            color: var(--muted);
+            font-size: 11px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .elsewhere {
+            color: var(--muted);
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            overflow-wrap: anywhere;
+            margin: -4px 0 12px;
+        }
+
+        .empty-reference {
+            color: var(--amber);
+            font-size: 13px;
+        }
+
+        .set-head,
+        .set-row {
+            display: grid;
+            grid-template-columns: 24px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, .8fr) 44px;
+            gap: 7px;
+            align-items: center;
+        }
+
+        .set-head {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .set-row {
+            margin-top: 7px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .set-row input {
+            text-align: center;
+            padding: 8px 4px;
+            min-width: 0;
+        }
+
+        .set-number {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .set-row .icon-button {
+            border-color: #424b5c;
+        }
+
+        .set-actions {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .set-actions button {
+            color: var(--muted);
+        }
+
+        .row-error {
+            color: #f0a1a1;
+            font-size: 12px;
+            min-height: 0;
+            margin-top: 6px;
+        }
+
+        .row-error:empty {
+            display: none;
+        }
+
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg);
+            border-top: 1px solid var(--line);
+            z-index: 15;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .bottom-inner {
+            max-width: 800px;
+            margin: auto;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .bottom-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .done-count {
+            font-size: 14px;
+            font-weight: 650;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .rest-row {
+            max-width: 764px;
+            margin: 0 auto;
+            padding: 10px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rest-row[hidden] {
+            display: none;
+        }
+
+        .rest-time {
+            font-size: 18px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            min-width: 54px;
+        }
+
+        .rest-label {
+            flex: 1;
+            font-size: 12px;
+            color: var(--muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        dialog {
+            padding: 0;
+            border: 1px solid #424b5c;
+            border-bottom: 0;
+            border-radius: 8px 8px 0 0;
+            color: var(--text);
+            background: var(--surface);
+            max-width: 760px;
+            width: calc(100% - 24px);
+            max-height: 86dvh;
+            margin: auto auto 0;
+            box-shadow: 0 12px 36px #0008;
+        }
+
+        dialog::backdrop {
+            background: #000b;
+        }
+
+        .sheet-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .sheet-header h2 {
+            flex: 1;
+        }
+
+        .sheet-body {
+            padding: 18px;
+            overflow-y: auto;
+            max-height: calc(86dvh - 75px);
+        }
+
+        .sheet-subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 5px 0 18px;
+        }
+
+        .sheet-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .sheet-section {
+            margin-top: 22px;
+        }
+
+        .sheet-section h3 {
+            margin-bottom: 10px;
+        }
+
+        .history-list {
+            margin-top: 12px;
+        }
+
+        .history-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line);
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .history-row .muted {
+            min-width: 60px;
+        }
+
+        .history-row span:last-child {
+            text-align: right;
+        }
+
+        .context-item {
+            padding: 12px 0;
+            border-top: 1px solid var(--line);
+        }
+
+        .context-item strong {
+            font-size: 13px;
+        }
+
+        .context-item p {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .context-label {
+            color: var(--amber);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .chart-title {
+            margin: 18px 0 4px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 140px;
+        }
+
+        .equipment-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--line);
+            cursor: pointer;
+        }
+
+        .equipment-option input {
+            appearance: auto;
+            width: 19px;
+            min-height: 19px;
+            height: 19px;
+            margin: 3px 0 0;
+            flex-shrink: 0;
+            accent-color: var(--accent);
+        }
+
+        .equipment-option strong {
+            display: block;
+            font-size: 14px;
+        }
+
+        .equipment-option span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .new-equipment-fields {
+            margin-top: 16px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .new-equipment-fields[hidden] {
+            display: none;
+        }
+
+        .sheet-message {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #cbd1dc;
+        }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: 150px;
+            transform: translateX(-50%);
+            z-index: 30;
+            background: #263149;
+            border: 1px solid #5a6e9f;
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 13px;
+            width: max-content;
+            max-width: calc(100% - 32px);
+            text-align: center;
+        }
+
+        #toast[hidden] {
+            display: none;
+        }
+
+        .screen-reader {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+
+        @media(max-width:440px) {
+            .header-inner {
+                padding: 10px 12px;
+            }
+
+            main {
+                padding: 16px 12px 170px;
+            }
+
+            .concept {
+                font-size: 11px;
+            }
+
+            .controls {
+                gap: 9px;
+                margin-bottom: 20px;
+            }
+
+            select {
+                font-size: 14px;
+                padding-left: 8px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .exercise {
+                padding: 12px;
+            }
+
+            .exercise-tools {
+                gap: 4px;
+            }
+
+            .reference {
+                align-items: flex-start;
+            }
+
+            .reference-values {
+                font-size: 13px;
+            }
+
+            .bottom-inner {
+                padding: 12px;
+                gap: 10px;
+            }
+
+            .bottom-inner .command {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .rest-row {
+                padding: 10px 12px 0;
+            }
+
+            dialog {
+                width: 100%;
+            }
+        }
+
+        @media(prefers-reduced-motion:no-preference) {
+            dialog[open] {
+                animation: sheet-in .18s ease-out;
+            }
+
+            @keyframes sheet-in {
+                from {
+                    transform: translateY(16px);
+                }
+
+                to {
+                    transform: translateY(0);
+                }
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <defs>
+            <symbol id="i-history" viewBox="0 0 24 24">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5M12 7v5l4 2" />
+            </symbol>
+            <symbol id="i-settings" viewBox="0 0 24 24">
+                <path d="M21 4H14M10 4H3M21 12H12M8 12H3M21 20H16M12 20H3M14 2v4M8 10v4M16 18v4" />
+            </symbol>
+            <symbol id="i-check" viewBox="0 0 24 24">
+                <path d="m9 12 2 2 4-4" />
+                <circle cx="12" cy="12" r="10" />
+            </symbol>
+            <symbol id="i-plus" viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14" />
+            </symbol>
+            <symbol id="i-minus" viewBox="0 0 24 24">
+                <path d="M5 12h14" />
+            </symbol>
+            <symbol id="i-close" viewBox="0 0 24 24">
+                <path d="m18 6-12 12M6 6l12 12" />
+            </symbol>
+            <symbol id="i-pin" viewBox="0 0 24 24">
+                <path
+                    d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                <circle cx="12" cy="10" r="3" />
+            </symbol>
+            <symbol id="i-pause" viewBox="0 0 24 24">
+                <rect x="6" y="3" width="4" height="18" rx="1" />
+                <rect x="14" y="3" width="4" height="18" rx="1" />
+            </symbol>
+            <symbol id="i-play" viewBox="0 0 24 24">
+                <path d="m9 5 12 7-12 7V5" />
+            </symbol>
+            <symbol id="i-reset" viewBox="0 0 24 24">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5" />
+            </symbol>
+            <symbol id="i-link" viewBox="0 0 24 24">
+                <path
+                    d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </symbol>
+        </defs>
+    </svg>
+    <header class="page-header">
+        <div class="header-inner">
+            <img class="brand" src="icon-192.png" width="38" height="38" alt="YF">
+            <div>
+                <div class="brand-name">YF Tracker</div>
+                <div class="small muted">Train</div>
+            </div>
+            <div class="concept" id="review-mode">v2.0</div>
+            <button class="icon-button" data-action="backups" title="Backups and restore"
+                aria-label="Backups and restore"><svg class="icon">
+                    <use href="#i-history" />
+                </svg></button>
+        </div>
+    </header>
+    <div class="update-bar" id="update-bar" hidden><span>New version ready.</span><button class="command" data-action="reload-app">Reload</button></div>
+    <main>
+        <div class="controls">
+            <div><label class="field" for="session">Workout</label><select id="session">
+                    <option value="upper-a">Upper A</option>
+                    <option value="lower-a">Lower A</option>
+                    <option value="upper-b">Upper B</option>
+                    <option value="upper-c">Upper C</option>
+                    <option value="lower-b">Lower B</option>
+                </select></div>
+            <div><label class="field" for="venue">Venue</label><select id="venue">
+                    <option value="ttl">ToTheLimitGym</option>
+                    <option value="bf">Basic Fit</option>
+                    <option value="home">Home</option>
+                    <option value="hotel">Hotel</option>
+                    <option value="other">Other</option>
+                </select></div>
+        </div>
+        <div class="controls">
+            <div><label class="field" for="workout-date">Workout date</label><input id="workout-date" type="date"></div>
+            <div><label class="field">Local save</label>
+                <p class="small muted" id="save-status" role="status">Opening storage</p>
+            </div>
+        </div>
+        <input type="file" id="backup-file" accept="application/json,.json" hidden>
+        <div class="workout-heading">
+            <div>
+                <h1 id="workout-title">Upper A</h1>
+                <p class="muted" id="workout-subtitle"></p>
+            </div>
+        </div>
+        <div id="exercise-list"></div>
+    </main>
+    <footer class="bottom-bar">
+        <div class="rest-row" id="rest-row" hidden><span class="rest-time" id="rest-time">2:30</span><span
+                class="rest-label" id="rest-label"></span><button class="icon-button" data-action="pause-timer"
+                id="pause-timer" title="Pause rest timer" aria-label="Pause rest timer"><svg class="icon">
+                    <use href="#i-pause" />
+                </svg></button><button class="icon-button" data-action="close-timer" title="Dismiss rest timer"
+                aria-label="Dismiss rest timer"><svg class="icon">
+                    <use href="#i-close" />
+                </svg></button></div>
+        <div class="bottom-inner">
+            <div class="bottom-info">
+                <div class="done-count" id="done-count">0 sets completed</div>
+                <div class="small muted" id="draft-status">ToTheLimitGym draft</div>
+            </div><button class="command" data-action="finish"><svg class="icon">
+                    <use href="#i-check" />
+                </svg>Finish workout</button>
+        </div>
+    </footer>
+    <dialog id="sheet" aria-labelledby="sheet-title">
+        <div class="sheet-header">
+            <h2 id="sheet-title"></h2><button class="icon-button" data-action="close-sheet" title="Close"
+                aria-label="Close"><svg class="icon">
+                    <use href="#i-close" />
+                </svg></button>
+        </div>
+        <div class="sheet-body" id="sheet-body"></div>
+    </dialog>
+    <div id="toast" role="status" hidden></div>
+    <script src="review-store.js"></script>
+    <script>
+        'use strict';
+        const venueNames = { ttl: 'ToTheLimitGym', bf: 'Basic Fit', home: 'Home', hotel: 'Hotel', other: 'Other' };
+        const sessionNames = { 'upper-a': 'Upper A', 'lower-a': 'Lower A', 'upper-b': 'Upper B', 'upper-c': 'Upper C', 'lower-b': 'Lower B' };
+        const sessionSubtitles = { 'upper-a': 'Chest and back - heavy', 'lower-a': 'Quads, hamstrings and abs', 'upper-b': 'Shoulders and arms', 'upper-c': 'Chest and back - volume', 'lower-b': 'Leg accessories and abs' };
+        const APP_VERSION = 'v2.0';
+        const todayISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        const dateDM = iso => iso.split('-').reverse().join('/');
+        const state = { session: 'upper-a', venue: 'ttl', dateISO: todayISO(), archive: null, drafts: new Map(), draftItems: new Map(), draftDates: new Map(), equipment: new Map(), custom: new Map(), customExercises: new Map(), history: new Map(), workouts: [], pairs: new Map(), substitutions: new Map(), skipped: new Set(), mappings: new Map(), notes: new Map(), sampleSessions: 0 };
+        const persistence = { store: null, ready: false, queue: Promise.resolve(), failed: false, revision: 0 };
+        const icon = name => '<svg class="icon" aria-hidden="true"><use href="#i-' + name + '"/></svg>';
+        const escapeHTML = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+        const reference = (weight, reps, rir = 1) => reps.map(count => ({ weight, reps: count, rir }));
+        const gear = (id, name, kind, unit, venues, previous = null, date = 'Oct 5') => ({ id, name, kind, unit, venues, previous, date });
+        const shared = (id, name, unit, previous) => gear(id, name, 'Free weight', unit, ['ttl', 'bf', 'home'], previous, 'Oct 4');
+        const equipmentVenues = equipment => equipment.venues.map(venue => venueNames[venue]).join(' / ');
+        const loadChoices = [['unconfirmed', 'Not confirmed'], ['kg', 'Stack or cable reading (kg)'], ['kg total plates', 'Total added plates (kg)'], ['kg per arm', 'Plates per arm (kg)'], ['kg / DB', 'Each dumbbell (kg)'], ['kg barbell', 'Bar plus plates (kg)'], ['kg added', 'Additional weight (kg)'], ['kg total', 'Total dumbbell weight (kg)'], ['BW', 'Bodyweight']];
+        function loadConfirmed(equipment) {
+            return equipment.kind !== 'Unidentified setup' && !['kg plates', 'kg logged', 'unconfirmed'].includes(equipment.unit);
+        }
+        function loadLabel(equipment) {
+            if (!loadConfirmed(equipment)) return 'Convention unconfirmed';
+            if (equipment.unit === 'kg' && equipment.kind === 'Free weight') return 'Bar plus plates (kg)';
+            return (loadChoices.find(choice => choice[0] === equipment.unit) || [equipment.unit, equipment.unit])[1];
+        }
+        function loadOptionHTML(equipment, selectedUnit) {
+            let allowed = loadChoices.map(choice => choice[0]);
+            if (equipment.kind === 'Plate-loaded') allowed = ['unconfirmed', 'kg total plates', 'kg per arm'];
+            if (equipment.kind === 'Weight stack' || equipment.kind === 'Cable pulley') allowed = ['unconfirmed', 'kg'];
+            if (equipment.kind === 'Bodyweight') allowed = ['BW'];
+            if (equipment.kind === 'Free weight') allowed = ['unconfirmed', 'kg', 'kg / DB', 'kg barbell', 'kg added', 'kg total'];
+            const choices = loadChoices.filter(choice => allowed.includes(choice[0])).map(choice => choice[0] === 'kg' && equipment.kind === 'Free weight' ? ['kg', 'Bar plus plates (kg)'] : choice);
+            return choices.map(([unit, label]) => '<option value="' + escapeHTML(unit) + '"' + (unit === selectedUnit ? ' selected' : '') + '>' + escapeHTML(label) + '</option>').join('');
+        }
+        const equipmentCatalog = {
+            pulldown: [gear('pulldown-ttl', 'Cable pulldown', 'Weight stack', 'kg', ['ttl'], reference(70, [9, 9, 8])), gear('pulldown-bf', 'Pulldown machine', 'Weight stack', 'kg', ['bf'], reference(66, [9, 9, 8]), 'Sep 23'), gear('pulldown-home', 'Garage pulley', 'Cable pulley', 'kg', ['home'], reference(45, [10, 9, 8]), 'Sep 15')],
+            closeRow: [gear('row-ttl', 'Cable row', 'Weight stack', 'kg', ['ttl'], reference(70, [11, 9, 8])), gear('row-bf', 'Seated row', 'Weight stack', 'kg', ['bf'], reference(52, [11, 10, 9]), 'Sep 19'), gear('row-home', 'Garage pulley', 'Cable pulley', 'kg', ['home'], reference(45, [10, 10, 9]))],
+            bench: [gear('bench-ttl', 'Barbell bench - TTL setup', 'Free weight', 'kg', ['ttl'], reference(65, [5, 5, 5, 5])), gear('bench-bf', 'Barbell bench - Basic Fit setup', 'Free weight', 'kg', ['bf'], reference(67.5, [6, 5, 5, 5]), 'Sep 19'), gear('bench-home', 'Garage barbell bench', 'Free weight', 'kg', ['home'], reference(65, [6, 5, 5, 5]))],
+            singlePull: [gear('single-ttl', 'Single-arm cable', 'Weight stack', 'kg', ['ttl'], reference(56, [11, 8])), gear('single-bf', 'Single-arm cable', 'Weight stack', 'kg', ['bf'], reference(36, [11, 10, 10]))],
+            dips: [shared('weighted-dips', 'Weighted dips', 'kg added', reference(10, [7, 7, 6]))],
+            shrug: [shared('barbell-shrug', 'Barbell shrug', 'kg', reference(75, [12, 12, 11]))],
+            lateral: [gear('lateral-ttl', 'Flame Sport 3PLX', 'Plate-loaded', 'kg plates', ['ttl'], reference(2.5, [10, 9, 8])), shared('lateral-db', 'Dumbbell lateral raise', 'kg / DB', reference(7, [15, 14, 12]))],
+            facePull: [gear('face-bf', 'Face-pull cable', 'Weight stack', 'kg', ['bf'], reference(27, [15, 13, 12])), gear('face-home', 'Garage pulley', 'Cable pulley', 'kg', ['home'], reference(20, [15, 14, 12]))],
+            squat: [shared('barbell-squat', 'Barbell back squat', 'kg', reference(82.5, [5, 5, 4, 4], 2))],
+            belt: [gear('belt-ttl', 'Belt squat', 'Plate-loaded', 'kg plates', ['ttl'], reference(60, [8, 8, 4]))],
+            splitSquat: [shared('split-db', 'Bulgarian split squat', 'kg total', reference(36, [10, 10, 9, 8], 2))],
+            rdl: [shared('barbell-rdl', 'Barbell Romanian deadlift', 'kg', reference(80, [6, 6, 6, 6], 2))],
+            glute: [gear('glute-ttl', 'Hammer Strength Glute Drive', 'Plate-loaded', 'kg plates', ['ttl'], reference(80, [12, 11, 10], 2))],
+            lyingCurl: [gear('lying-ttl', 'Hammer Strength lying curl', 'Weight stack', 'kg', ['ttl'], reference(46, [12, 10, 9])), gear('lying-bf', 'Lying leg curl', 'Weight stack', 'kg', ['bf'], reference(54, [12, 11, 10]))],
+            seatedCurl: [gear('seated-bf', 'Seated leg curl', 'Weight stack', 'kg', ['bf'], reference(68, [10, 9]))],
+            kneelingCurl: [gear('kneeling-ttl', 'HS kneeling iso-lateral curl', 'Plate-loaded', 'kg plates', ['ttl'], reference(15, [15, 13, 12]))],
+            extension: [gear('extension-ttl', 'Hammer Strength leg extension', 'Weight stack', 'kg', ['ttl'], reference(82, [12, 10, 9])), gear('extension-bf', 'Leg extension', 'Weight stack', 'kg', ['bf'], reference(75, [12, 11, 10]))],
+            hack: [gear('hack-ttl', 'Hack squat - TTL', 'Plate-loaded', 'kg plates', ['ttl'], reference(50, [10, 10, 10, 9])), gear('hack-bf', 'Hack squat - Basic Fit', 'Plate-loaded', 'kg plates', ['bf'], reference(50, [8, 8, 7, 7]))],
+            abBench: [gear('ab-ttl', 'Ab bench crunch', 'Plate-loaded', 'kg plates', ['ttl'], reference(12.5, [10, 9, 9, 8]))],
+            oblique: [gear('oblique-ttl', 'Hammer Strength oblique crunch', 'Plate-loaded', 'kg plates', ['ttl'], reference(5, [12, 11, 10]))],
+            jackknife: [shared('jackknife-cable', 'Weighted jackknife', 'kg', reference(40, [12, 12, 11, 10]))],
+            twist: [shared('twist-plate', 'Russian twist', 'kg', reference(20, [20, 20, 20]))],
+            legRaise: [gear('leg-raise', 'Slow leg raise', 'Bodyweight', 'BW', ['ttl', 'bf', 'home', 'hotel'], reference(0, [15, 14]))],
+            situp: [gear('sit-up', 'Sit-up', 'Bodyweight', 'BW', ['bf', 'home', 'hotel'], reference(0, [25]))],
+            plank: [gear('plank', 'Plank', 'Bodyweight', 'BW', ['bf', 'home', 'hotel'], reference(0, [50, 45]))],
+            ohp: [shared('standing-ohp', 'Standing barbell OHP', 'kg', reference(40, [5, 4, 4, 4])), gear('seated-home-ohp', 'Seated barbell OHP', 'Free weight', 'kg', ['home'], reference(35, [7, 6, 6, 5]))],
+            shoulderPress: [gear('shoulder-ttl', 'Hammer Strength shoulder press', 'Plate-loaded', 'kg plates', ['ttl'], reference(20, [8, 7, 5])), gear('shoulder-bf', 'Shoulder press machine', 'Weight stack', 'kg', ['bf'], reference(35, [10, 9, 8]))],
+            rearDelt: [gear('rear-ttl', 'Rear-delt machine', 'Weight stack', 'kg', ['ttl'], reference(54, [10, 9, 8])), gear('rear-bf', 'Rear-delt cable fly', 'Cable pulley', 'kg', ['bf'], reference(8, [15, 13, 12]))],
+            inclineCurl: [shared('incline-db-curl', 'Incline dumbbell curl', 'kg / DB', reference(12.5, [10, 9, 8, 7]))],
+            overhead: [gear('overhead-bf', 'Overhead cable triceps', 'Weight stack', 'kg', ['bf'], reference(32, [12, 11, 10, 9])), gear('overhead-home', 'Garage overhead cable', 'Cable pulley', 'kg', ['home'], reference(25, [12, 11, 10, 9]))],
+            rope: [gear('rope-ttl', 'Rope triceps pushdown', 'Weight stack', 'kg', ['ttl'], reference(35, [13, 13, 12, 10])), gear('rope-bf', 'Rope triceps pushdown', 'Weight stack', 'kg', ['bf'], reference(54, [10, 9, 8, 8]))],
+            hsTriceps: [gear('triceps-ttl', 'Hammer Strength triceps extension', 'Plate-loaded', 'kg plates', ['ttl'], reference(46, [12, 12, 10]))],
+            preacher: [gear('preacher-ttl', 'Hammer Strength preacher curl', 'Plate-loaded', 'kg logged', ['ttl'], reference(12.5, [10, 9]), 'Oct 7'), gear('preacher-bf', 'Preacher curl machine', 'Weight stack', 'kg', ['bf'], reference(18, [12, 10]), 'Sep 25')],
+            reverse: [gear('reverse-cable-ttl', 'Cable reverse curl', 'Cable pulley', 'kg', ['ttl']), shared('reverse-ez', 'EZ-bar reverse curl', 'kg', reference(36, [12, 11, 10]))],
+            hammer: [shared('hammer-db', 'Dumbbell hammer curl', 'kg / DB', reference(14, [12, 11, 10]))],
+            dyRow: [gear('dy-ttl', 'Hammer Strength D.Y. Row', 'Plate-loaded', 'kg plates', ['ttl'], reference(30, [10, 9, 8, 8]))],
+            highRow: [gear('high-ttl', 'Hammer Strength High Row', 'Plate-loaded', 'kg plates', ['ttl'], reference(40, [10, 9, 8]))],
+            wideRow: [gear('wide-bf', 'Wide-grip cable row', 'Weight stack', 'kg', ['bf'], reference(52, [8, 8, 7]))],
+            inclinePress: [shared('incline-db-press', 'Incline dumbbell press', 'kg / DB', reference(25, [8, 8, 7]))],
+            fly: [shared('db-fly', 'Dumbbell chest fly', 'kg / DB', reference(20, [10, 9, 8]))],
+            pullover: [gear('pullover-ttl', 'Cable pullover - TTL', 'Weight stack', 'kg', ['ttl'], reference(44, [12, 10, 10])), gear('pullover-bf', 'Cable pullover - Basic Fit', 'Weight stack', 'kg', ['bf'], reference(44, [11, 10, 9]))]
+        };
+        const exercise = (key, name, sets, reps, rir, rest, group = '') => ({ key, name, sets, reps, rir, rest, group });
+        const abs = ttl => ttl ? [exercise('abBench', 'Ab bench crunch', 4, '10-15', '1', '1:00', 'Abs'), exercise('oblique', 'Oblique crunch', 3, '12-15 / side', '1', '1:00', 'Abs'), exercise('legRaise', 'Slow leg raise', 2, '12-15', '1', '1:00', 'Abs')] : [exercise('jackknife', 'Weighted jackknife', 4, '12', '', '1:00', 'Abs'), exercise('twist', 'Russian twist', 3, '20', '', '0:45', 'Abs'), exercise('legRaise', 'Slow leg raise', 1, '25', '', '0:45', 'Abs'), exercise('situp', 'Sit-ups', 1, '25', '', '0:45', 'Abs'), exercise('plank', 'Plank', 2, '45-60 sec', '', '0:45', 'Abs')];
+        function baseConfiguration(session = state.session, venue = state.venue) {
+            const ttl = venue === 'ttl';
+            if (session === 'upper-a') return [exercise('pulldown', 'Wide-grip pulldown', 3, '8-10', '1-2', '2:30'), exercise('closeRow', 'Close-grip row', 3, '10', '1-2', '2:30'), exercise('bench', 'Barbell bench press', 4, '5-8', '1-2', '3:00'), exercise('singlePull', 'Single-arm pulldown', 3, '10', '2', '2:00'), exercise('dips', 'Weighted dips', 3, '8-10', '2', '2:00'), exercise('shrug', 'Barbell shrug', 3, '12-15', '1', '1:30', 'Superset: traps and side delts'), exercise('lateral', 'Lateral raise', 3, '12-15', '1', '1:30', 'Superset: traps and side delts'), exercise('facePull', 'Face pulls', 3, '12-15', '1', '1:00')];
+            if (session === 'lower-a') return ttl ? [exercise('belt', 'Belt squat', 4, '8-12', '1-2', '2:30'), exercise('rdl', 'Romanian deadlift', 4, '8', '2', '3:00'), exercise('glute', 'Glute Drive', 3, '8-12', '1', '2:00'), exercise('lyingCurl', 'Lying leg curl', 3, '10-12', '1', '1:30'), ...abs(true)] : [exercise('squat', 'Barbell back squat', 4, '5-8', '2', '3:00'), exercise('splitSquat', 'Bulgarian split squat', 4, '10 / leg', '2', '2:00'), exercise('rdl', 'Romanian deadlift', 4, '8', '2', '3:00'), ...abs(false)];
+            if (session === 'lower-b') return ttl ? [exercise('hack', 'Hack squat', 4, '8-12', '1-2', '2:30'), exercise('kneelingCurl', 'Kneeling iso-lateral curl', 3, '10-15 / leg', '1', '1:30'), exercise('extension', 'Leg extension', 3, '10-15', '0-1', '1:30'), ...abs(true)] : [exercise('hack', 'Hack squat', 4, '10', '1-2', '2:30'), exercise('lyingCurl', 'Lying leg curl', 3, '10', '1', '1:30'), exercise('seatedCurl', 'Seated leg curl', 2, '10', '1', '1:30'), exercise('extension', 'Leg extension', 3, '10-12', '0-1', '1:30'), ...abs(false)];
+            if (session === 'upper-c') return [ttl ? exercise('dyRow', 'D.Y. Row', 4, '8-12', '1-2', '2:30') : exercise('pulldown', 'Wide-grip pulldown', 4, '8-10', '1-2', '2:30'), exercise('inclinePress', 'Incline dumbbell press', 3, '8-10', '1-2', '2:30'), ttl ? exercise('highRow', 'High Row', 3, '10-12', '1-2', '2:00') : exercise('wideRow', 'Wide-grip row', 3, '10', '1-2', '2:30'), exercise('fly', 'Dumbbell chest fly', 3, '10-12', '1', '1:30'), exercise('pullover', 'Cable pullover', 3, '12', '1', '1:30'), exercise('facePull', 'Face pulls', 3, '12-15', '1', '1:30'), exercise('lateral', 'Lateral raise', 3, '12-15', '1', '1:30')];
+            // Upper B (Oct 9 revision): TTL uses its machines; every other venue gets the free-weight adaptation.
+            const shoulders = ttl
+                ? [exercise('ohp', 'Standing barbell OHP', 3, '5-8', '2', '3:00'), exercise('shoulderPress', 'Shoulder press machine', 3, '8-12', '0-1', '2:00'), exercise('lateral', 'Lateral raise', 4, '10-15', '1', '1:30'), exercise('rearDelt', 'Rear-delt machine', 3, '12-15', '1', '1:30')]
+                : [exercise('ohp', venue === 'home' ? 'Seated barbell OHP' : 'Standing barbell OHP', 5, '5-8', '2', '3:00'), exercise('lateral', 'Lateral raise', 4, '10-15', '1', '1:30'), exercise('rearDelt', 'Rear-delt fly', 3, '12-15', '1', '1:30')];
+            const pair = 'Superset: incline curl and rope pushdown';
+            return [...shoulders, exercise('inclineCurl', 'Incline dumbbell curl', 4, '10', '1-2', '1:30', pair), exercise('rope', 'Rope triceps pushdown', 4, '10', '1-2', '1:30', pair), ttl ? exercise('hsTriceps', 'HS triceps extension', 3, '8-12', '1-2', '1:30') : exercise('overhead', 'Overhead triceps', 3, '8-12', '1-2', '1:30'), exercise('preacher', 'Preacher curl', 4, '10', '1-2', '1:30'), exercise('reverse', 'Reverse curl', 3, '10', '1', '1:30')];
+        }
+        function defaultEquipment(item, venue = state.venue) {
+            return resolveEquipment(item, venue);
+        }
+        function configuration(session = state.session, venue = state.venue) {
+            return baseConfiguration(session, venue).map(item => {
+                const replacement = state.substitutions.get(session + '|' + venue + '|' + item.key);
+                return replacement ? { ...replacement, slotKey: item.key, group: item.group } : { ...item, slotKey: item.key };
+            });
+        }
+        function isSkipped(item) { return state.skipped.has(state.session + '|' + state.venue + '|' + item.slotKey); }
+        function knownExercise(key) {
+            if (state.customExercises.has(key)) return state.customExercises.get(key);
+            for (const session of Object.keys(sessionNames)) for (const venue of ['ttl', 'bf']) {
+                const item = baseConfiguration(session, venue).find(candidate => candidate.key === key);
+                if (item) return item;
+            }
+            return null;
+        }
+        const alternatives = {
+            pulldown: ['dyRow'], dyRow: ['pulldown'], closeRow: ['wideRow', 'highRow'], wideRow: ['closeRow', 'highRow'], highRow: ['wideRow', 'closeRow'],
+            squat: ['belt', 'hack', 'splitSquat'], belt: ['squat', 'hack', 'splitSquat'], hack: ['squat', 'belt'],
+            kneelingCurl: ['lyingCurl', 'seatedCurl'], lyingCurl: ['seatedCurl', 'kneelingCurl'], seatedCurl: ['lyingCurl', 'kneelingCurl'],
+            overhead: ['rope', 'hsTriceps'], rope: ['overhead', 'hsTriceps'], hsTriceps: ['rope', 'overhead'],
+            preacher: ['inclineCurl', 'hammer'], inclineCurl: ['preacher', 'hammer'], shoulderPress: ['ohp'],
+            abBench: ['jackknife', 'situp'], oblique: ['twist'], jackknife: ['abBench', 'situp'], twist: ['oblique']
+        };
+        function resolveEquipment(item, venue = state.venue) {
+            const options = equipmentCatalog[item.key] || [];
+            const specific = options.find(option => option.venues.length === 1 && option.venues[0] === venue);
+            const common = options.find(option => option.venues.includes(venue));
+            return specific || common || gear('unknown-' + venue + '-' + item.key, venueNames[venue] + ' equipment', 'Unidentified setup', 'kg', [venue]);
+        }
+        function equipmentAt(item, venue) {
+            const selection = state.equipment.get(venue + '|' + item.key);
+            return state.custom.get(selection) || (equipmentCatalog[item.key] || []).find(option => option.id === selection) || defaultEquipment(item, venue);
+        }
+        function selectedEquipment(item) {
+            const selection = state.equipment.get(state.venue + '|' + item.key);
+            return state.custom.get(selection) || (equipmentCatalog[item.key] || []).find(option => option.id === selection) || defaultEquipment(item);
+        }
+        function equipmentKey(equipment) {
+            if (equipment.exerciseKey) return equipment.exerciseKey;
+            for (const [key, options] of Object.entries(equipmentCatalog)) if (options.some(option => option.id === equipment.id)) return key;
+            const unknown = /^unknown-[a-z]+-(.+)$/.exec(equipment.id);
+            return unknown ? unknown[1] : null;
+        }
+        // An imported record links itself to a setup when its venue and logged exercise name identify exactly one
+        // setup, as the previous app did. Anything ambiguous stays unmapped for manual confirmation.
+        function autoLinkedId(record, key) {
+            if (!record.venue || !key) return null;
+            const name = record.exercise.name.toLowerCase().trim();
+            const options = [...(equipmentCatalog[key] || []), ...[...state.custom.values()].filter(option => option.exerciseKey === key)].filter(option => option.venues.includes(record.venue));
+            const matches = options.filter(option => exportedExerciseName({ exerciseKey: key, equipmentName: option.name, name: option.name }).toLowerCase().trim() === name);
+            return matches.length === 1 ? matches[0].id : null;
+        }
+        function historyFor(equipment) {
+            const saved = state.history.get(equipment.id) || [];
+            if (state.archive) {
+                const key = equipmentKey(equipment), seen = new Set(saved.map(record => record.date + '|' + record.venue));
+                const mapped = legacyRecords().filter(record => {
+                    const mapping = state.mappings.get(record.id);
+                    if (mapping) return mapping.equipmentId === equipment.id && mapping.unit === equipment.unit;
+                    return autoLinkedId(record, key) === equipment.id;
+                }).map(record => ({ date: record.workout.date, venue: record.venue, unit: equipment.unit, sets: record.exercise.sets })).filter(record => !seen.has(record.date + '|' + record.venue));
+                return [...saved, ...mapped].sort((first, second) => recordTime(second.date) - recordTime(first.date));
+            }
+            if (saved.length) return saved;
+            if (!equipment.previous) return [];
+            const venue = equipment.venues.length === 1 ? equipment.venues[0] : 'ttl';
+            const records = [{ date: 'Sample visit 3', venue, unit: equipment.unit, sets: equipment.previous }];
+            for (const [index, date] of ['Sample visit 2', 'Sample visit 1'].entries()) records.push({ date, venue, unit: equipment.unit, sets: equipment.previous.map(sample => ({ ...sample, reps: Math.max(1, sample.reps - index - 1) })) });
+            return records;
+        }
+        function referenceFor(equipment, venue = state.venue) {
+            const records = historyFor(equipment);
+            const local = records.find(record => record.venue === venue);
+            if (local) return { record: local, label: 'Last on this setup' };
+            if (records.length && (equipment.kind === 'Free weight' || equipment.kind === 'Bodyweight')) {
+                return { record: records[0], label: equipment.kind === 'Free weight' ? 'Shared free-weight reference' : 'Shared bodyweight reference' };
+            }
+            return null;
+        }
+        // Latest performance of this exercise at another venue, hidden when this venue has a newer one. Display only: never a prefill or a load target.
+        function elsewhereFor(item, equipment) {
+            // Every setup this exercise could have been logged on, at every venue: catalog, custom and each venue's default.
+            const byId = new Map();
+            for (const option of [equipment, ...(equipmentCatalog[item.key] || []), ...[...state.custom.values()].filter(option => option.exerciseKey === item.key), ...Object.keys(venueNames).map(venue => equipmentAt(item, venue))]) byId.set(option.id, option);
+            const options = [...byId.values()];
+            const candidates = [];
+            for (const option of options) for (const record of historyFor(option)) if (record.sets.length) candidates.push(record);
+            for (const record of legacyRecords(item.key)) if (record.exercise.sets.length) candidates.push({ date: record.workout.date, venue: record.venue, sets: record.exercise.sets });
+            candidates.sort((first, second) => recordTime(second.date) - recordTime(first.date));
+            const local = candidates.find(record => record.venue === state.venue);
+            const other = candidates.find(record => record.venue !== state.venue);
+            const shown = referenceFor(equipment);
+            if (!other) return null;
+            // Hide only when the local record is provably newer; undated sample visits cannot prove that.
+            if (local && recordTime(local.date) > recordTime(other.date)) return null;
+            if (shown && shown.record.date === other.date && shown.record.venue === other.venue) return null;
+            return other;
+        }
+        function elsewhereHTML(item, equipment) {
+            const record = elsewhereFor(item, equipment);
+            if (!record) return '';
+            const where = record.venue ? 'Last time in another venue - ' + venueNames[record.venue] : 'Last time - venue not recorded';
+            return '<div class="elsewhere"><span aria-hidden="true">\u2194</span> ' + escapeHTML(where + ' ' + record.date) + ': ' + escapeHTML(formatSets(record.sets, equipment.unit === 'BW', false)) + ' - context only</div>';
+        }
+        function draftFor(item, equipment = selectedEquipment(item)) {
+            const key = state.session + '|' + state.venue + '|' + item.key + '|' + equipment.id;
+            if (!state.draftDates.has(state.session + '|' + state.venue)) state.draftDates.set(state.session + '|' + state.venue, state.dateISO);
+            if (!state.drafts.has(key)) state.drafts.set(key, Array.from({ length: item.sets }, () => ({ weight: '', reps: '', rir: '', done: false })));
+            if (!state.draftItems.has(key)) state.draftItems.set(key, { ...item });
+            return state.drafts.get(key);
+        }
+        function entryHasValues(entry) {
+            return entry.weight !== '' || entry.reps !== '' || entry.rir !== '' || entry.done;
+        }
+        function entryError(item, equipment, entry) {
+            if (!loadConfirmed(equipment)) return 'Choose the equipment and recorded load convention.';
+            if (entry.reps === '' || !Number.isInteger(Number(entry.reps)) || Number(entry.reps) < 1) return 'Enter a positive ' + (item.key === 'plank' ? 'duration' : 'rep count') + '.';
+            if (equipment.unit !== 'BW' && (entry.weight === '' || !Number.isFinite(Number(entry.weight)) || Number(entry.weight) < 0)) return 'Enter the weight used.';
+            if (entry.rir !== '' && (!Number.isInteger(Number(entry.rir)) || Number(entry.rir) < 0 || Number(entry.rir) > 10)) return 'RIR must be between 0 and 10.';
+            return '';
+        }
+        function workoutEntries() {
+            const items = new Map([...baseConfiguration(), ...configuration()].map(item => [item.key, item]));
+            for (const replacement of state.substitutions.values()) items.set(replacement.key, replacement);
+            const groups = [];
+            for (const [key, draft] of state.drafts) {
+                const [session, venue, exerciseKey, equipmentId] = key.split('|');
+                if (session !== state.session || venue !== state.venue || !draft.some(entryHasValues)) continue;
+                const item = state.draftItems.get(key) || items.get(exerciseKey) || knownExercise(exerciseKey);
+                if (!item) continue;
+                const equipment = state.custom.get(equipmentId) || (equipmentCatalog[exerciseKey] || []).find(option => option.id === equipmentId) || defaultEquipment(item, venue);
+                const entries = draft.map((entry, index) => ({ entry, index, error: entryHasValues(entry) ? entryError(item, equipment, entry) : '' })).filter(value => entryHasValues(value.entry));
+                groups.push({ key, item, equipment, entries });
+            }
+            return groups;
+        }
+        const formatSets = (sets, bodyweight = false, includeRIR = true) => sets.map(sample => (bodyweight ? '' : sample.weight + ' x ') + sample.reps + (includeRIR ? ' [RIR ' + (sample.rir == null || sample.rir === '' ? '?' : sample.rir) + ']' : '')).join(' / ');
+        function guidanceFor(item, equipment) {
+            if (!loadConfirmed(equipment)) return 'Choose the equipment and load convention before working sets.';
+            const first = draftFor(item, equipment).find(entry => entry.reps !== '' && entry.weight !== '');
+            const range = item.reps.match(/^(\d+)(?:-(\d+))?/);
+            const targetRIR = item.rir.match(/^(\d+)(?:-(\d+))?/);
+            if (first && range && targetRIR) {
+                const reps = Number(first.reps), rir = first.rir === '' ? null : Number(first.rir);
+                const low = Number(range[1]), high = Number(range[2] || range[1]), lowRIR = Number(targetRIR[1]), highRIR = Number(targetRIR[2] || targetRIR[1]);
+                if (entryError(item, equipment, first)) return 'Complete a valid first working set before assessing load.';
+                if (reps < low || (rir !== null && rir < lowRIR)) return 'First set below target: reduce the next working load; keep clean reps.';
+                if (rir !== null && (reps > high || (reps >= high && rir > highRIR))) return 'First set has headroom: test the next available increment, not a converted machine load.';
+                if (rir === null) return 'First-set reps recorded. Add RIR to assess effort before changing load.';
+                if (rir > highRIR) return 'First set has headroom: build to the top of the rep range before increasing load.';
+                return 'First set fits the target: keep this load and build consistent reps.';
+            }
+            return referenceFor(equipment) ? 'Previous load is a reference, not a prescription. Warm up, then match the target reps and RIR.' : 'New setup: warm up conservatively and establish a first working set at the target reps and RIR.';
+        }
+        function render() {
+            document.getElementById('workout-date').value = state.dateISO;
+            document.getElementById('review-mode').innerHTML = APP_VERSION + '<br>' + (state.archive ? 'Training log' : 'Import needed');
+            const bottomBar = typeof document.querySelector === 'function' ? document.querySelector('.bottom-bar') : null;
+            if (!state.archive && !state.demo) {
+                // First run: no demo data in production; the training history must be imported once.
+                if (bottomBar) bottomBar.hidden = true;
+                document.getElementById('workout-title').textContent = 'Import your training history';
+                document.getElementById('workout-subtitle').textContent = 'One-time step for this version';
+                document.getElementById('exercise-list').innerHTML = '<article class="exercise"><p>Import your latest full export: iCloud Drive, folder yf-tracker, newest yf-tracker-export file.</p><p class="muted small">This version stores its data separately. The previous version and its data stay untouched.</p><button class="command" data-action="import-review">Import export file</button></article>';
+                return;
+            }
+            if (bottomBar) bottomBar.hidden = false;
+            document.getElementById('session').value = state.session;
+            document.getElementById('venue').value = state.venue;
+            document.getElementById('workout-title').textContent = sessionNames[state.session];
+            const items = configuration();
+            document.getElementById('workout-subtitle').textContent = sessionSubtitles[state.session] + ' - ' + items.length + ' exercises';
+            let previousGroup = '';
+            document.getElementById('exercise-list').innerHTML = items.map((item, index) => {
+                const partners = item.group.startsWith('Superset') ? items.filter(candidate => candidate.group === item.group) : [];
+                const pairKey = state.session + '|' + state.venue + '|' + item.group;
+                const active = state.pairs.get(pairKey) || (partners[0] && partners[0].key);
+                if (partners.length > 1 && item.key !== active) return '';
+                const equipment = selectedEquipment(item), reference = referenceFor(equipment), previous = reference && reference.record, draft = draftFor(item, equipment);
+                const bodyweight = equipment.unit === 'BW';
+                let heading = '';
+                if (item.group && item.group !== previousGroup) heading = '<div class="group-heading">' + (item.group.startsWith('Superset') ? icon('link') : '') + escapeHTML(item.group) + '</div>';
+                if (partners.length > 1) heading += '<div class="pair-tabs" role="tablist" aria-label="' + escapeHTML(item.group) + '">' + partners.map((partner, partnerIndex) => '<button role="tab" aria-selected="' + (partner.key === active) + '" data-action="pair" data-index="' + items.indexOf(partner) + '">' + (partnerIndex === 0 ? 'A: ' : 'B: ') + escapeHTML(partner.name) + '</button>').join('') + '</div>';
+                previousGroup = item.group;
+                if (isSkipped(item)) return heading + '<article class="exercise" data-exercise="' + item.key + '"><h2>' + escapeHTML(item.name) + '</h2><p class="muted small">Skipped for this workout</p><button class="text-command" data-action="restore-exercise" data-index="' + index + '">Restore exercise</button></article>';
+                return heading + '<article class="exercise" data-exercise="' + item.key + '"><div class="exercise-heading"><div class="exercise-name"><h2>' + escapeHTML(item.name) + '</h2><div class="target">' + item.sets + ' x ' + escapeHTML(item.reps) + (item.rir ? ' - RIR ' + escapeHTML(item.rir) : '') + ' - Rest ' + item.rest + '</div></div><div class="exercise-tools"><button class="icon-button" data-action="equipment" data-index="' + index + '" title="Change ' + escapeHTML(item.name) + ' equipment" aria-label="Change ' + escapeHTML(item.name) + ' equipment">' + icon('settings') + '</button><button class="icon-button" data-action="history" data-index="' + index + '" title="' + escapeHTML(item.name) + ' history" aria-label="' + escapeHTML(item.name) + ' history">' + icon('history') + '</button></div></div><div class="equipment-line">' + icon('pin') + '<span>' + escapeHTML(equipment.name) + ' - ' + escapeHTML(equipment.kind) + '</span></div>' + (!loadConfirmed(equipment) ? '<div class="convention-warning"><span>Recorded load convention unconfirmed</span><button class="text-command" data-action="equipment" data-index="' + index + '">' + (equipment.kind === 'Unidentified setup' ? 'Choose equipment' : 'Choose convention') + '</button></div>' : '') + '<div class="reference">' + (previous ? '<span class="reference-values">' + escapeHTML(formatSets(previous.sets, bodyweight, false)) + '</span><span class="reference-meta">' + (loadConfirmed(equipment) ? escapeHTML(reference.label) : 'Raw recorded sets') + '<br>' + escapeHTML(previous.date) + (previous.venue ? '<br>' + escapeHTML(venueNames[previous.venue]) : '<br>Venue not recorded') + '</span>' : '<span class="empty-reference">No previous sets on this equipment</span>') + '</div>' + elsewhereHTML(item, equipment) + '<div class="set-head"><span>Set</span><span>' + escapeHTML(loadConfirmed(equipment) ? equipment.unit : 'kg logged') + '</span><span>' + (item.key === 'plank' ? 'Seconds' : 'Reps') + '</span><span>RIR</span><span class="screen-reader">Complete</span></div>' + draft.map((entry, setIndex) => {
+                    const prior = previous && (previous.sets[setIndex] || previous.sets[previous.sets.length - 1]);
+                    return '<div class="set-row"><span class="set-number">' + (setIndex + 1) + '</span><input aria-label="' + escapeHTML(item.name) + ' set ' + (setIndex + 1) + ' weight" data-field="weight" data-index="' + index + '" data-set="' + setIndex + '" inputmode="decimal" type="number" min="0" step="any" placeholder="' + (bodyweight ? 'BW' : prior && loadConfirmed(equipment) ? prior.weight : 'kg') + '" value="' + escapeHTML(entry.weight) + '"' + (bodyweight || !loadConfirmed(equipment) ? ' disabled' : '') + '><input aria-label="' + escapeHTML(item.name) + ' set ' + (setIndex + 1) + ' ' + (item.key === 'plank' ? 'seconds' : 'reps') + '" data-field="reps" data-index="' + index + '" data-set="' + setIndex + '" inputmode="numeric" type="number" min="1" step="1" placeholder="' + (prior && loadConfirmed(equipment) ? prior.reps : item.key === 'plank' ? 'sec' : 'reps') + '" value="' + escapeHTML(entry.reps) + '"' + (!loadConfirmed(equipment) ? ' disabled' : '') + '><input aria-label="' + escapeHTML(item.name) + ' set ' + (setIndex + 1) + ' RIR" data-field="rir" data-index="' + index + '" data-set="' + setIndex + '" inputmode="numeric" type="number" min="0" max="10" step="1" placeholder="RIR" value="' + escapeHTML(entry.rir) + '"' + (!loadConfirmed(equipment) ? ' disabled' : '') + '><button class="icon-button' + (entry.done ? ' active' : '') + '" data-action="complete" data-index="' + index + '" data-set="' + setIndex + '" aria-pressed="' + entry.done + '" title="Complete ' + escapeHTML(item.name) + ' set ' + (setIndex + 1) + '" aria-label="Complete ' + escapeHTML(item.name) + ' set ' + (setIndex + 1) + '"' + (!loadConfirmed(equipment) ? ' disabled' : '') + '>' + icon('check') + '</button></div><div class="row-error" id="error-' + index + '-' + setIndex + '" role="status"></div>';
+                }).join('') + '<p class="guidance">' + escapeHTML(guidanceFor(item, equipment)) + '</p><label class="field" for="note-' + index + '">Workout note</label><input id="note-' + index + '" data-note="' + index + '" maxlength="500" value="' + escapeHTML(state.notes.get(state.session + '|' + state.venue + '|' + item.key + '|' + equipment.id) || '') + '"><div class="set-actions"><button class="icon-button" data-action="add-set" data-index="' + index + '" title="Add ' + escapeHTML(item.name) + ' set" aria-label="Add ' + escapeHTML(item.name) + ' set">' + icon('plus') + '</button><button class="icon-button" data-action="remove-set" data-index="' + index + '" title="Remove last ' + escapeHTML(item.name) + ' set" aria-label="Remove last ' + escapeHTML(item.name) + ' set"' + (draft.length === 1 ? ' disabled' : '') + '>' + icon('minus') + '</button><span class="small muted">' + (item.group.startsWith('Superset') ? 'Rest after both partners' : escapeHTML(loadLabel(equipment))) + '</span></div><div class="availability"><button class="text-command" data-action="unavailable" data-index="' + index + '">Equipment unavailable</button>' + (item.slotKey !== item.key ? '<button class="text-command" data-action="restore-exercise" data-index="' + index + '">Original exercise</button>' : '') + '</div></article>';
+            }).join('');
+            updateFooter();
+            saveReview();
+        }
+        function updateFooter() {
+            const entries = configuration().filter(item => !isSkipped(item)).flatMap(item => draftFor(item));
+            const active = new Set(configuration().filter(item => !isSkipped(item)).map(item => state.session + '|' + state.venue + '|' + item.key + '|' + selectedEquipment(item).id));
+            const other = workoutEntries().filter(group => !active.has(group.key)).flatMap(group => group.entries.map(value => value.entry));
+            const done = [...entries, ...other].filter(entry => entry.done).length;
+            document.getElementById('done-count').textContent = done + ' / ' + (entries.length + other.length) + ' sets completed';
+            document.getElementById('draft-status').textContent = venueNames[state.venue] + ' draft' + (other.length ? ' - ' + other.length + ' sets on other equipment' : '');
+        }
+        function hasEntries() { const prefix = state.session + '|' + state.venue + '|'; return workoutEntries().length > 0 || [...state.notes].some(([key, note]) => key.startsWith(prefix) && note.trim()); }
+        function hasAnyDraftEntries() { return [...state.drafts.values()].some(draft => draft.some(entry => entry.weight !== '' || entry.reps !== '' || entry.rir !== '' || entry.done)) || [...state.notes.values()].some(note => note.trim()); }
+        let sheetResolution = null;
+        const sheet = document.getElementById('sheet');
+        function closeSheet(result = false) {
+            if (sheet.open) sheet.close();
+            if (sheetResolution) { const resolve = sheetResolution; sheetResolution = null; resolve(result); }
+        }
+        function openSheet(title, body) {
+            closeSheet();
+            document.getElementById('sheet-title').textContent = title;
+            document.getElementById('sheet-body').innerHTML = body;
+            sheet.showModal();
+        }
+        function confirmAction(title, message, action = 'Continue') {
+            openSheet(title, '<p class="sheet-message">' + escapeHTML(message) + '</p><div class="sheet-actions"><button class="command secondary" data-action="close-sheet">Keep current draft</button><button class="command" data-action="confirm-sheet">' + escapeHTML(action) + '</button></div>');
+            return new Promise(resolve => { sheetResolution = resolve; });
+        }
+        async function selectWorkout(session, venue) {
+            if (hasEntries() && !(await confirmAction(venue !== state.venue ? 'Change venue?' : 'Change workout?', 'Current entries will remain in your ' + venueNames[state.venue] + ' ' + sessionNames[state.session] + ' draft.', 'Change'))) { render(); return; }
+            state.session = session; state.venue = venue; state.dateISO = state.draftDates.get(session + '|' + venue) || todayISO(); stopTimer(); render(); window.scrollTo({ top: 0 });
+        }
+        function showHistory(index) {
+            const item = configuration()[index], equipment = selectedEquipment(item), records = historyFor(equipment);
+            const other = [...(equipmentCatalog[item.key] || []), ...[...state.custom.values()].filter(option => option.exerciseKey === item.key)].filter(option => option.id !== equipment.id && historyFor(option).length);
+            let body = '<h3>' + escapeHTML(equipment.name) + '</h3><p class="sheet-subtitle">' + escapeHTML(equipmentVenues(equipment)) + ' - ' + escapeHTML(equipment.kind) + ' - ' + escapeHTML(loadLabel(equipment)) + '</p>';
+            if (records.length) body += (loadConfirmed(equipment) ? '<div class="chart-title">Top-set reps / RIR at ' + records[0].sets[0].weight + ' ' + escapeHTML(equipment.unit) + '</div><canvas id="history-chart" height="140" aria-label="Illustrative same-equipment reps with RIR labels" role="img"></canvas>' : '<p class="empty-reference">Raw history - load convention unconfirmed</p>') + '<div class="history-list">' + records.map(record => '<div class="history-row"><span class="muted">' + escapeHTML(record.date) + (record.venue ? '<br>' + escapeHTML(venueNames[record.venue]) : '') + '</span><span>' + escapeHTML(formatSets(record.sets, equipment.unit === 'BW')) + '</span></div>').join('') + '</div>';
+            else body += '<p class="empty-reference">No history for this equipment</p>';
+            if (other.length) body += '<section class="sheet-section"><h3>Other equipment <span class="context-label">Context only</span></h3>' + other.map(option => '<div class="context-item"><strong>' + escapeHTML(option.name) + '</strong><p>' + escapeHTML(equipmentVenues(option)) + ' - ' + escapeHTML(option.kind) + ' - ' + escapeHTML(loadLabel(option)) + '</p><p>' + escapeHTML(formatSets(historyFor(option)[0].sets, option.unit === 'BW')) + ' - ' + escapeHTML(historyFor(option)[0].date) + '</p></div>').join('') + '</section>';
+            const legacy = legacyRecords(item.key).filter(record => record.venue === state.venue && !state.mappings.has(record.id) && !autoLinkedId(record, item.key));
+            if (legacy.length) body += '<section class="sheet-section"><h3>Imported records - setup not mapped</h3>' + legacy.slice(0, 8).map(record => '<div class="context-item"><strong>' + escapeHTML(record.workout.date + ' - ' + record.exercise.name) + '</strong><p>' + escapeHTML(record.exercise.note || '') + '</p><p>' + escapeHTML(formatSets(record.exercise.sets, equipment.unit === 'BW')) + '</p><button class="command secondary" data-action="map-history" data-index="' + index + '" data-record="' + escapeHTML(record.id) + '"' + (!loadConfirmed(equipment) ? ' disabled' : '') + '>Confirm this setup matches</button></div>').join('') + '</section>';
+            openSheet(item.name + ' history', body);
+            if (records.length && loadConfirmed(equipment)) drawHistory(records, equipment);
+        }
+        function drawHistory(records, equipment) {
+            const canvas = document.getElementById('history-chart');
+            if (!canvas) return;
+            const width = canvas.clientWidth, height = 140, scale = window.devicePixelRatio || 1;
+            canvas.width = width * scale; canvas.height = height * scale;
+            const context = canvas.getContext('2d'); context.scale(scale, scale);
+            const topWeight = records[0].sets[0].weight;
+            const points = records.filter(record => record.sets[0].weight === topWeight).slice(0, 4).reverse();
+            const maximum = Math.max(...points.map(record => record.sets[0].reps), 1) + 2;
+            const left = 24, bottom = 116, usable = width - left - 8, track = usable / points.length, bar = Math.min(44, track * .48);
+            context.fillStyle = '#a4acbb'; context.font = '11px -apple-system,sans-serif'; context.textAlign = 'right';
+            for (const value of [0, Math.round(maximum / 2), maximum]) { const vertical = bottom - value / maximum * 95; context.strokeStyle = '#303642'; context.beginPath(); context.moveTo(left, vertical); context.lineTo(width, vertical); context.stroke(); context.fillText(String(value), left - 6, vertical + 4); }
+            points.forEach((record, index) => { const center = left + track * (index + .5), value = record.sets[0].reps, barHeight = value / maximum * 95; context.fillStyle = index === points.length - 1 ? '#8492ff' : '#505b94'; context.fillRect(center - bar / 2, bottom - barHeight, bar, barHeight); context.fillStyle = '#e6e9ef'; context.textAlign = 'center'; context.fillText(String(value) + ' @' + (record.sets[0].rir == null ? '?' : record.sets[0].rir), center, bottom - barHeight - 6); context.fillStyle = '#a4acbb'; context.fillText(record.date, center, 134); });
+        }
+        function showEquipment(index) {
+            const item = configuration()[index], current = selectedEquipment(item);
+            const options = (equipmentCatalog[item.key] || []).filter(option => option.venues.includes(state.venue));
+            const custom = [...state.custom.values()].filter(option => option.venues.includes(state.venue) && option.exerciseKey === item.key);
+            if (!options.some(option => option.id === current.id) && !custom.some(option => option.id === current.id)) options.push(current);
+            const choices = [...options, ...custom];
+            openSheet(item.name + ' equipment', '<p class="sheet-subtitle">' + escapeHTML(venueNames[state.venue]) + '</p><form id="equipment-form" data-index="' + index + '">' + choices.map(option => '<label class="equipment-option"><input type="radio" name="equipment" value="' + escapeHTML(option.id) + '"' + (option.id === current.id ? ' checked' : '') + '><div><strong>' + escapeHTML(option.name) + '</strong><span>' + escapeHTML(option.kind) + ' - ' + escapeHTML(loadLabel(option)) + '</span></div></label>').join('') + '<label class="equipment-option"><input type="radio" name="equipment" value="new"><div><strong>Different equipment</strong><span>New load baseline</span></div></label><div class="new-equipment-fields" id="new-equipment-fields" hidden><div><label class="field" for="equipment-name">Equipment name</label><input id="equipment-name" maxlength="80" placeholder="Machine or setup name"></div></div><div class="new-equipment-fields"><div><label class="field" for="load-unit">Recorded load convention</label><select id="load-unit">' + loadOptionHTML(current, loadConfirmed(current) ? current.unit : 'unconfirmed') + '</select></div></div><div class="row-error" id="equipment-error" role="status"></div><div class="sheet-actions"><button type="button" class="command secondary" data-action="close-sheet">Cancel</button><button type="submit" class="command">' + icon('check') + 'Use equipment</button></div></form>');
+        }
+        function showUnavailable(index) {
+            const item = configuration()[index];
+            const existing = new Set(configuration().map(candidate => candidate.key));
+            const choices = (alternatives[item.key] || []).map(knownExercise).filter(candidate => candidate && !existing.has(candidate.key));
+            openSheet(item.name + ' unavailable', '<p class="sheet-subtitle">Different movements keep separate histories</p>' + choices.map(candidate => '<div class="context-item"><strong>' + escapeHTML(candidate.name) + '</strong><p>' + candidate.sets + ' x ' + escapeHTML(candidate.reps) + ' - RIR ' + escapeHTML(candidate.rir) + '</p><button class="command secondary" data-action="substitute" data-index="' + index + '" data-exercise="' + candidate.key + '">Use ' + escapeHTML(candidate.name) + '</button></div>').join('') + '<div class="sheet-actions"><button class="command secondary" data-action="custom-exercise" data-index="' + index + '">Custom exercise</button><button class="command secondary" data-action="skip-exercise" data-index="' + index + '">Skip this exercise</button></div>');
+        }
+        async function changeExercise(index, key) {
+            const item = configuration()[index];
+            if (draftFor(item).some(entryHasValues) && !(await confirmAction('Change this exercise?', 'Entered sets stay with their original exercise and remain included at Finish.', 'Change exercise'))) return;
+            const slot = state.session + '|' + state.venue + '|' + item.slotKey;
+            if (key === 'skip') state.skipped.add(slot);
+            else if (key === 'restore') { state.skipped.delete(slot); state.substitutions.delete(slot); state.pairs.set(state.session + '|' + state.venue + '|' + item.group, item.slotKey); }
+            else {
+                const replacement = knownExercise(key);
+                if (!replacement) return;
+                state.substitutions.set(slot, { ...replacement, group: item.group, slotKey: item.slotKey }); state.skipped.delete(slot);
+                state.pairs.set(state.session + '|' + state.venue + '|' + item.group, replacement.key);
+            }
+            closeSheet(); stopTimer(); render();
+        }
+        function showCustomExercise(index) {
+            const item = configuration()[index];
+            openSheet('Custom replacement', '<form id="replacement-form" data-index="' + index + '"><label class="field" for="replacement-name">Exercise</label><input id="replacement-name" maxlength="80" required><div class="controls" style="margin-top:12px"><div><label class="field" for="replacement-sets">Sets</label><input id="replacement-sets" type="number" min="1" max="20" value="' + item.sets + '" required></div><div><label class="field" for="replacement-reps">Target reps</label><input id="replacement-reps" value="' + escapeHTML(item.reps) + '" required></div><div><label class="field" for="replacement-rir">Target RIR</label><input id="replacement-rir" value="' + escapeHTML(item.rir) + '"></div><div><label class="field" for="replacement-rest">Rest (m:ss)</label><input id="replacement-rest" value="' + item.rest + '" required></div></div><label class="field" for="replacement-equipment">Equipment/setup</label><input id="replacement-equipment" maxlength="80" placeholder="For example, hotel dumbbells" required><label class="field" for="replacement-unit">Recorded load</label><select id="replacement-unit">' + loadOptionHTML({ kind: 'Unidentified setup' }, 'unconfirmed') + '</select><div class="row-error" id="replacement-error"></div><div class="sheet-actions"><button type="button" class="command secondary" data-action="close-sheet">Cancel</button><button class="command" type="submit">Use replacement</button></div></form>');
+        }
+        async function applyCustomExercise(form) {
+            const index = Number(form.dataset.index), original = configuration()[index];
+            const name = form.querySelector('#replacement-name').value.trim(), equipmentName = form.querySelector('#replacement-equipment').value.trim(), unit = form.querySelector('#replacement-unit').value;
+            const sets = Number(form.querySelector('#replacement-sets').value), reps = form.querySelector('#replacement-reps').value.trim(), rir = form.querySelector('#replacement-rir').value.trim(), rest = form.querySelector('#replacement-rest').value.trim();
+            if (!name || !equipmentName || unit === 'unconfirmed' || !Number.isInteger(sets) || sets < 1 || sets > 20 || !/^\d+(?:-\d+)?(?:\s*\/\s*(?:leg|side))?$/.test(reps) || (rir && !/^\d(?:-\d)?$/.test(rir)) || !/^\d{1,2}:[0-5]\d$/.test(rest)) { form.querySelector('#replacement-error').textContent = 'Enter the exercise/setup, valid targets, rest and load convention.'; return; }
+            closeSheet();
+            if (draftFor(original).some(entryHasValues) && !(await confirmAction('Change this exercise?', 'Entered sets remain with their original exercise and are included at Finish.', 'Change exercise'))) return;
+            const key = 'custom-exercise-' + Date.now();
+            const replacement = exercise(key, name, sets, reps, rir, rest, original.group);
+            state.customExercises.set(key, replacement);
+            const equipment = { ...gear(key + '-equipment', equipmentName, unit === 'BW' ? 'Bodyweight' : unit.includes('plates') || unit.includes('arm') ? 'Plate-loaded' : unit === 'kg' ? 'Weight stack' : 'Free weight', unit, [state.venue]), exerciseKey: key };
+            state.custom.set(equipment.id, equipment); state.equipment.set(state.venue + '|' + key, equipment.id);
+            state.substitutions.set(state.session + '|' + state.venue + '|' + original.slotKey, { ...replacement, slotKey: original.slotKey });
+            state.pairs.set(state.session + '|' + state.venue + '|' + original.group, key); state.skipped.delete(state.session + '|' + state.venue + '|' + original.slotKey);
+            render();
+        }
+        async function applyEquipment(form) {
+            const index = Number(form.dataset.index), item = configuration()[index], current = selectedEquipment(item);
+            const choice = form.querySelector('input[name="equipment"]:checked').value;
+            const unit = form.querySelector('#load-unit').value;
+            if (unit === 'unconfirmed') { form.querySelector('#equipment-error').textContent = 'Choose how the load is recorded.'; form.querySelector('#load-unit').focus(); return; }
+            let next;
+            if (choice === 'new') {
+                const name = form.querySelector('#equipment-name').value.trim();
+                if (!name) { form.querySelector('#equipment-error').textContent = 'Enter an equipment name.'; form.querySelector('#equipment-name').focus(); return; }
+                next = { ...gear('custom-' + Date.now(), name, unit === 'BW' ? 'Bodyweight' : unit.includes('plates') || unit.includes('arm') ? 'Plate-loaded' : unit === 'kg' ? 'Weight stack' : 'Free weight', unit, [state.venue]), exerciseKey: item.key };
+            } else next = state.custom.get(choice) || (equipmentCatalog[item.key] || []).find(option => option.id === choice) || current;
+            if (next.kind === 'Unidentified setup') { form.querySelector('#equipment-error').textContent = 'Choose Different equipment and give this setup a name.'; return; }
+            if (choice !== 'new' && unit !== next.unit) {
+                const sourceId = next.sourceId || next.id;
+                const versionId = sourceId + '-' + state.venue + '-unit-' + unit.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                next = state.custom.get(versionId) || { ...next, id: versionId, sourceId, unit, venues: [state.venue], previous: null, exerciseKey: item.key };
+            }
+            closeSheet();
+            if (next.id !== current.id && draftFor(item, current).some(entryHasValues)) {
+                const confirmed = await confirmAction('Change equipment?', 'Entered sets will stay with ' + current.name + '. The selected equipment opens its own draft.', 'Change equipment');
+                if (!confirmed) return;
+            }
+            if (choice === 'new' || next.sourceId) state.custom.set(next.id, next);
+            state.equipment.set(state.venue + '|' + item.key, next.id); render();
+        }
+        const legacyNames = {
+            pulldown: ['Tirage vertical prise large'], closeRow: ['Tirage horizontal prise serr\u00e9'], bench: ['D\u00e9velopp\u00e9 couch\u00e9 barre'], singlePull: ['Tirage vertical unilat\u00e9ral'], dips: ['Dips (lest\u00e9s ou BW)'], shrug: ['Shrug barre'], lateral: ['\u00c9l\u00e9vations lat\u00e9rales', '\u00c9l\u00e9vations lat\u00e9rales machine (Flame Sport 3PLX) (optionnel)'],
+            squat: ['Back squat barre'], splitSquat: ['Bulgarian split squat'], rdl: ['Romanian deadlift barre'], belt: ['Belt squat'], glute: ['Glute Drive (HS)'], lyingCurl: ['Leg curl allong\u00e9'], seatedCurl: ['Leg curl assis'], kneelingCurl: ['Kneeling leg curl iso-lateral (HS)'], extension: ['Leg extension'], hack: ['Hack squat'], abBench: ['Ab bench crunch'], oblique: ['Oblique crunch machine (HS)'], jackknife: ['Weighted jackknife'], twist: ['Russian twist'], legRaise: ['Leg raise slow'], situp: ['Sit-ups feet on ground (optionnel)'], plank: ['Plank hold'],
+            ohp: ['Standing OHP barbell', 'Seated OHP barbell'], shoulderPress: ['Shoulder press machine (optionnel)'], rearDelt: ['Rear delt cable fly', 'Rear delt machine'], inclineCurl: ['Curl inclin\u00e9 halt\u00e8res'], overhead: ['Overhead triceps'], rope: ['Triceps barre poulie haute'], hsTriceps: ['Triceps Extension machine (HS) (optionnel)'], preacher: ['Preacher curl'], reverse: ['Reverse curl EZ', 'Reverse curl poulie'], hammer: ['Hammer curl'], dyRow: ['Iso-Lateral D.Y. Row (HS)'], highRow: ['Iso-Lateral High Row (HS)'], wideRow: ['Tirage horizontal prise large'], inclinePress: ['D\u00e9velopp\u00e9 inclin\u00e9 halt\u00e8res'], fly: ['\u00c9cart\u00e9 halt\u00e8re pec'], pullover: ['Pull-over cable']
+        };
+        function recordTime(date) { const parts = date.split('/').map(Number); return parts.length === 3 ? new Date(parts[2], parts[1] - 1, parts[0]).getTime() : 0; }
+        function legacyRecords(key) {
+            if (!state.archive) return [];
+            const names = key ? [knownExercise(key) && knownExercise(key).name, ...(legacyNames[key] || [])].filter(Boolean).map(name => name.toLowerCase().trim()) : null;
+            return state.archive.workouts.flatMap(workout => workout.exercises.map((exercise, index) => ({ id: workout.date + '|' + workout.session + '|' + index, workout, exercise, venue: Object.keys(venueNames).find(venue => venueNames[venue] === workout.location) || null }))).filter(record => !names || names.includes(record.exercise.name.toLowerCase().trim())).sort((first, second) => recordTime(second.workout.date) - recordTime(first.workout.date));
+        }
+        function exportedExerciseName(exercise) {
+            if (exercise.exerciseKey === 'ohp' && /seated/i.test(exercise.equipmentName)) return 'Seated OHP barbell';
+            if (exercise.exerciseKey === 'lateral' && /Flame Sport/i.test(exercise.equipmentName)) return legacyNames.lateral[1];
+            if (exercise.exerciseKey === 'rearDelt' && /machine/i.test(exercise.equipmentName)) return 'Rear delt machine';
+            if (exercise.exerciseKey === 'rope') return 'Rope triceps pushdown';
+            if (exercise.exerciseKey === 'reverse' && /cable|pulley/i.test(exercise.equipmentName)) return legacyNames.reverse[1];
+            return (legacyNames[exercise.exerciseKey] || [exercise.name])[0];
+        }
+        function legacyWorkout(workout) {
+            return { date: workout.date, session: sessionNames[workout.session], location: venueNames[workout.venue], exercises: workout.exercises.map(exercise => ({ name: exportedExerciseName(exercise), target: exercise.target || '', rest: exercise.rest || '', note: exercise.note || '', sets: exercise.sets.map(set => ({ weight: set.weight, reps: set.reps, ...(set.rir == null ? {} : { rir: set.rir }) })), equipment_id: exercise.equipmentId, equipment_name: exercise.equipmentName, load_unit: exercise.unit })) };
+        }
+        function currentSnapshot() { return { state: TrackerReview.pack(state), archive: state.archive ? TrackerReview.clone(state.archive) : null, savedAt: new Date().toISOString() }; }
+        function saveReview() {
+            if (!persistence.ready || !persistence.store) return persistence.queue;
+            const snapshot = currentSnapshot();
+            const revision = ++persistence.revision;
+            document.getElementById('save-status').textContent = 'Saving locally';
+            persistence.queue = persistence.queue.catch(() => { }).then(() => persistence.store.put([['current', snapshot]])).then(() => { if (revision === persistence.revision) { persistence.failed = false; document.getElementById('save-status').textContent = 'Saved on this device'; } }).catch(error => { if (revision === persistence.revision) { persistence.failed = true; document.getElementById('save-status').textContent = 'Save failed - export a backup before closing'; } console.error(error); });
+            return persistence.queue;
+        }
+        async function startReviewStorage() {
+            try {
+                persistence.store = await TrackerReview.openStore(indexedDB);
+                const snapshot = await persistence.store.get('current');
+                if (snapshot) { TrackerReview.apply(state, snapshot.state); state.archive = snapshot.archive; }
+                persistence.ready = true; render();
+            } catch (error) {
+                persistence.ready = false; document.getElementById('save-status').textContent = 'Storage unavailable - keep an exported backup'; render(); console.error(error);
+            }
+        }
+        function showBackups() {
+            const count = state.archive ? state.archive.workouts.length + state.workouts.filter(workout => !state.archive.workouts.some(old => TrackerReview.identity(old) === TrackerReview.identity(legacyWorkout(workout)))).length : state.workouts.length;
+            openSheet('Backups and restore', '<p class="sheet-message">' + (state.archive ? count + ' full-history workouts. Original records and program are preserved.' : 'Demo data is separate from the installed tracker.') + '</p><div class="sheet-actions" style="flex-direction:column"><button class="command" data-action="export-review">Export full backup</button><button class="command secondary" data-action="import-review">Import full backup</button><button class="command secondary" data-action="rollback-review">Restore pre-import settings</button></div><p class="sheet-subtitle">Export after each session and save it to iCloud Drive, folder yf-tracker. The Mac merge reads it, and the previous app version can import it too.</p>');
+        }
+        async function exportReview() {
+            try {
+                await saveReview();
+                const bundle = TrackerReview.buildBundle(state, legacyWorkout);
+                const blob = new Blob([JSON.stringify(bundle, null, 1)], { type: 'application/json' });
+                const name = (state.archive ? 'yf-tracker-export-' : 'yf-tracker-review-demo-') + todayISO() + '.json';
+                const file = typeof File === 'function' ? new File([blob], name, { type: 'application/json' }) : null;
+                if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try { await navigator.share({ files: [file], title: 'YF Tracker export' }); toast('Exported.'); }
+                    catch (error) { if (error.name !== 'AbortError') toast(error.message); }
+                    return;
+                }
+                const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(link.href), 1000); toast('Full backup exported.');
+            } catch (error) { toast(error.message); }
+        }
+        async function importBackup(file) {
+            try {
+                if (hasAnyDraftEntries()) { openSheet('Active drafts protected', '<p class="sheet-message">Finish the current draft before importing another backup. You can export it now; none of its entered values have changed.</p><div class="sheet-actions"><button class="command secondary" data-action="close-sheet">Keep logging</button><button class="command" data-action="export-review">Export current backup</button></div>'); return; }
+                if (file.size > 20 * 1024 * 1024) throw new Error('Backup exceeds the 20 MB review limit.');
+                const incoming = TrackerReview.validateBundle(JSON.parse(await file.text()));
+                TrackerReview.validateReviewRecords(incoming, legacyWorkout);
+                if (incoming.app === 'yf-tracker-review' && state.archive && state.archive.app === 'yf-tracker') throw new Error('Demo backups cannot be mixed into imported workout history.');
+                const current = state.archive ? TrackerReview.legacyArchive(TrackerReview.buildBundle(state, legacyWorkout)) : null;
+                const merged = TrackerReview.mergeArchives(current, incoming);
+                if (incoming.tracker_review && merged.conflicts.length) throw new Error('Conflicting workouts require review before restoring this metadata. Existing history was not changed.');
+                if (!(await confirmAction('Import full backup?', incoming.workouts.length + ' workouts. Existing historical records will be kept; ' + merged.conflicts.length + ' conflicting records will not overwrite them. A recovery checkpoint is saved first.', 'Import backup'))) return;
+                await saveReview();
+                const checkpoint = currentSnapshot();
+                const staged = { ...state };
+                if (incoming.tracker_review) TrackerReview.apply(staged, incoming.tracker_review.state);
+                else if (!state.archive) {
+                    for (const field of ['drafts', 'draftItems', 'draftDates', 'equipment', 'custom', 'customExercises', 'history', 'pairs', 'substitutions', 'mappings', 'notes']) staged[field] = new Map();
+                    staged.workouts = []; staged.skipped = new Set(); staged.sampleSessions = 0; staged.dateISO = todayISO();
+                }
+                staged.archive = incoming.app === 'yf-tracker-review' ? null : merged.archive;
+                const snapshot = { state: TrackerReview.pack(staged), archive: staged.archive ? TrackerReview.clone(staged.archive) : null, savedAt: new Date().toISOString() };
+                if (persistence.store) await persistence.store.put([['before-import', checkpoint], ['current', snapshot]]);
+                TrackerReview.apply(state, snapshot.state); state.archive = snapshot.archive; stopTimer(); render(); toast(merged.conflicts.length ? 'Imported; conflicting originals kept unchanged.' : 'Imported without rewriting history.');
+            } catch (error) { toast(error.message); }
+            finally { document.getElementById('backup-file').value = ''; }
+        }
+        async function rollbackReview() {
+            try {
+                if (!persistence.store) throw new Error('Local recovery storage is unavailable.');
+                await saveReview();
+                const checkpoint = await persistence.store.get('before-import');
+                if (!checkpoint) throw new Error('No pre-import checkpoint exists yet.');
+                if (!(await confirmAction('Restore earlier settings?', 'All current workouts and entered drafts will be retained. Only previous workout/venue choices are restored.', 'Restore settings'))) return;
+                const archive = state.archive ? TrackerReview.rollbackArchive(TrackerReview.legacyArchive(TrackerReview.buildBundle(state, legacyWorkout)), checkpoint.archive) : checkpoint.archive;
+                state.session = checkpoint.state.session; state.venue = checkpoint.state.venue; state.archive = archive;
+                await saveReview(); closeSheet(); render(); toast('Settings restored; current history and drafts retained.');
+            } catch (error) { toast(error.message); }
+        }
+        async function mapHistory(index, id) {
+            const item = configuration()[index], equipment = selectedEquipment(item), record = legacyRecords(item.key).find(candidate => candidate.id === id);
+            if (!record || record.venue !== state.venue || !loadConfirmed(equipment)) return;
+            if (!(await confirmAction('Confirm historical equipment?', 'Confirm the exercise variant, exact apparatus and load convention match ' + equipment.name + '. The original workout will remain unchanged.', 'Confirm matching setup'))) return;
+            state.mappings.set(id, { equipmentId: equipment.id, unit: equipment.unit }); closeSheet(); render();
+        }
+        let toastTimeout;
+        function toast(message) { const element = document.getElementById('toast'); element.textContent = message; element.hidden = false; clearTimeout(toastTimeout); toastTimeout = setTimeout(() => { element.hidden = true; }, 2400); }
+        const timer = { interval: null, end: 0, remaining: 0, paused: false };
+        const timeString = seconds => Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+        function updateTimer() { const remaining = timer.paused ? timer.remaining : Math.max(0, Math.ceil((timer.end - Date.now()) / 1000)); document.getElementById('rest-time').textContent = timeString(remaining); if (!remaining && !timer.paused) { clearInterval(timer.interval); document.getElementById('rest-label').textContent = 'Rest complete'; } }
+        function startTimer(item) { stopTimer(); const [minutes, seconds] = item.rest.split(':').map(Number); timer.end = Date.now() + (minutes * 60 + seconds) * 1000; timer.paused = false; document.getElementById('rest-row').hidden = false; document.getElementById('rest-label').textContent = item.name; document.getElementById('pause-timer').innerHTML = icon('pause'); document.getElementById('pause-timer').setAttribute('aria-label', 'Pause rest timer'); document.getElementById('pause-timer').title = 'Pause rest timer'; updateTimer(); timer.interval = setInterval(updateTimer, 500); }
+        function stopTimer() { clearInterval(timer.interval); timer.interval = null; document.getElementById('rest-row').hidden = true; }
+        function toggleTimer() { timer.paused = !timer.paused; if (timer.paused) timer.remaining = Math.max(0, Math.ceil((timer.end - Date.now()) / 1000)); else timer.end = Date.now() + timer.remaining * 1000; const name = timer.paused ? 'Resume' : 'Pause'; document.getElementById('pause-timer').innerHTML = icon(timer.paused ? 'play' : 'pause'); document.getElementById('pause-timer').setAttribute('aria-label', name + ' rest timer'); document.getElementById('pause-timer').title = name + ' rest timer'; updateTimer(); }
+        function completeSet(index, setIndex) {
+            const item = configuration()[index], equipment = selectedEquipment(item), entry = draftFor(item, equipment)[setIndex];
+            if (!entry.done) {
+                const error = entryError(item, equipment, entry);
+                if (error) { document.getElementById('error-' + index + '-' + setIndex).textContent = error; return; }
+            }
+            entry.done = !entry.done;
+            const partners = item.group.startsWith('Superset') ? configuration().filter(candidate => candidate.group === item.group && !isSkipped(candidate)) : [];
+            if (entry.done && partners.length > 1) {
+                const pending = partners.find(partner => draftFor(partner)[setIndex] && !draftFor(partner)[setIndex].done);
+                if (pending) state.pairs.set(state.session + '|' + state.venue + '|' + item.group, pending.key);
+                if (pending) stopTimer();
+                else state.pairs.set(state.session + '|' + state.venue + '|' + item.group, partners[0].key);
+                render();
+                if (!pending) startTimer(item);
+            } else { render(); if (entry.done) startTimer(item); else stopTimer(); }
+        }
+        async function finish() {
+            const groups = workoutEntries();
+            const incomplete = groups.filter(group => group.entries.some(value => value.error));
+            if (incomplete.length) {
+                const count = incomplete.reduce((total, group) => total + group.entries.filter(value => value.error).length, 0);
+                openSheet('Review incomplete sets', '<p class="sheet-message">' + count + ' incomplete ' + (count === 1 ? 'set remains' : 'sets remain') + '. Nothing has been removed.</p><div class="history-list">' + incomplete.map(group => '<div class="context-item"><strong>' + escapeHTML(group.item.name) + ' - ' + escapeHTML(group.equipment.name) + '</strong>' + group.entries.filter(value => value.error).map(value => '<p>Set ' + (value.index + 1) + ': ' + escapeHTML(value.error) + '</p>').join('') + '<button class="command secondary" data-action="review-draft" data-draft="' + escapeHTML(group.key) + '">Return to sets</button></div>').join('') + '</div><div class="sheet-actions"><button class="command secondary" data-action="close-sheet">Keep logging</button></div>');
+                return;
+            }
+            const entered = groups.flatMap(group => group.entries);
+            if (!entered.length) { toast('Enter at least one performed set first.'); return; }
+            const unticked = entered.filter(value => !value.entry.done).length;
+            openSheet('Finish ' + sessionNames[state.session] + '?', '<p class="sheet-message">' + entered.length + ' entered sets at ' + escapeHTML(venueNames[state.venue]) + ', across ' + groups.length + ' equipment drafts.' + (unticked ? ' Includes ' + unticked + ' unticked ' + (unticked === 1 ? 'set' : 'sets') + '.' : '') + '</p><div class="history-list">' + groups.map(group => '<div class="context-item"><strong>' + escapeHTML(group.item.name) + '</strong><p>' + escapeHTML(group.equipment.name) + ' - ' + escapeHTML(group.equipment.unit) + '</p><p>' + escapeHTML(formatSets(group.entries.map(value => value.entry), group.equipment.unit === 'BW')) + '</p></div>').join('') + '</div><div class="sheet-actions"><button class="command secondary" data-action="close-sheet">Keep logging</button><button class="command" data-action="finish-confirm">' + icon('check') + 'Save all entered sets</button></div>');
+        }
+        function finishSample() {
+            const groups = workoutEntries();
+            if (!groups.length || groups.some(group => group.entries.some(value => value.error))) { finish(); return; }
+            const date = dateDM(state.draftDates.get(state.session + '|' + state.venue) || state.dateISO);
+            const family = name => name.replace(/\s*\u00b7\s*TTL$/, '').trim();
+            if (state.archive && [...state.archive.workouts, ...state.workouts.map(legacyWorkout)].some(workout => workout.date === date && family(workout.session) === sessionNames[state.session])) { toast('A workout already exists on this date. History was not overwritten; choose the correct workout date.'); return; }
+            const exercises = groups.map(group => ({
+                exerciseKey: group.item.key, name: group.item.name, equipmentId: group.equipment.id, equipmentName: group.equipment.name, equipmentKind: group.equipment.kind, unit: group.equipment.unit, loadConvention: loadLabel(group.equipment),
+                target: group.item.sets + 'x' + group.item.reps, rest: group.item.rest, note: state.notes.get(group.key) || '',
+                sets: group.entries.map(({ entry }) => ({ weight: group.equipment.unit === 'BW' ? 0 : Number(entry.weight), reps: Number(entry.reps), rir: entry.rir === '' ? null : Number(entry.rir) }))
+            }));
+            const workout = { date, session: state.session, venue: state.venue, exercises };
+            const updates = exercises.map(exercise => ({ id: exercise.equipmentId, record: { date, session: state.session, venue: state.venue, unit: exercise.unit, sets: exercise.sets }, records: state.history.get(exercise.equipmentId) || [] }));
+            state.workouts.push(workout);
+            for (const update of updates) state.history.set(update.id, [update.record, ...update.records]);
+            for (const group of groups) { state.drafts.delete(group.key); state.draftItems.delete(group.key); state.notes.delete(group.key); }
+            state.sampleSessions++; closeSheet(); stopTimer(); render(); toast('All entered sample sets saved.'); window.scrollTo({ top: 0 });
+        }
+        function reviewDraft(key) {
+            const [session, venue, exerciseKey, equipmentId] = key.split('|');
+            state.session = session; state.venue = venue;
+            state.dateISO = state.draftDates.get(session + '|' + venue) || state.dateISO;
+            let item = configuration().find(candidate => candidate.key === exerciseKey);
+            if (!item) {
+                const original = state.draftItems.get(key) || knownExercise(exerciseKey);
+                const slot = original && (original.slotKey || original.key);
+                if (original && baseConfiguration().some(candidate => candidate.key === slot)) {
+                    if (slot === original.key) state.substitutions.delete(session + '|' + venue + '|' + slot);
+                    else state.substitutions.set(session + '|' + venue + '|' + slot, { ...original, slotKey: slot });
+                    state.skipped.delete(session + '|' + venue + '|' + slot);
+                    item = configuration().find(candidate => candidate.key === exerciseKey);
+                }
+            }
+            if (item && item.group.startsWith('Superset')) state.pairs.set(session + '|' + venue + '|' + item.group, exerciseKey);
+            state.equipment.set(venue + '|' + exerciseKey, equipmentId);
+            closeSheet(); render();
+            const article = document.querySelector('[data-exercise="' + exerciseKey + '"]');
+            if (article) article.scrollIntoView({ block: 'center' });
+        }
+        document.addEventListener('input', event => {
+            if (event.target.dataset.note !== undefined) {
+                const item = configuration()[Number(event.target.dataset.note)], equipment = selectedEquipment(item);
+                state.notes.set(state.session + '|' + state.venue + '|' + item.key + '|' + equipment.id, event.target.value); saveReview(); return;
+            }
+            const field = event.target.dataset.field;
+            if (!field) return;
+            const index = Number(event.target.dataset.index), setIndex = Number(event.target.dataset.set), item = configuration()[index];
+            const entry = draftFor(item)[setIndex];
+            entry[field] = event.target.value;
+            if (entry.done) {
+                entry.done = false;
+                const button = document.querySelector('[data-action="complete"][data-index="' + index + '"][data-set="' + setIndex + '"]');
+                button.classList.remove('active'); button.setAttribute('aria-pressed', 'false'); updateFooter();
+            }
+            document.getElementById('error-' + index + '-' + setIndex).textContent = '';
+            const hint = document.querySelector('[data-exercise="' + item.key + '"] .guidance');
+            if (hint) hint.textContent = guidanceFor(item, selectedEquipment(item));
+            saveReview();
+        });
+        document.addEventListener('change', event => {
+            if (event.target.id === 'workout-date') { state.dateISO = event.target.value || todayISO(); state.draftDates.set(state.session + '|' + state.venue, state.dateISO); saveReview(); }
+            if (event.target.id === 'backup-file' && event.target.files[0]) importBackup(event.target.files[0]);
+            if (event.target.id === 'session') selectWorkout(event.target.value, state.venue);
+            if (event.target.id === 'venue') selectWorkout(state.session, event.target.value);
+            if (event.target.name === 'equipment') {
+                document.getElementById('new-equipment-fields').hidden = event.target.value !== 'new';
+                const item = configuration()[Number(document.getElementById('equipment-form').dataset.index)];
+                const equipment = state.custom.get(event.target.value) || (equipmentCatalog[item.key] || []).find(option => option.id === event.target.value) || selectedEquipment(item);
+                document.getElementById('load-unit').innerHTML = loadOptionHTML(event.target.value === 'new' ? { kind: 'Unidentified setup' } : equipment, event.target.value === 'new' || !loadConfirmed(equipment) ? 'unconfirmed' : equipment.unit);
+            }
+        });
+        document.addEventListener('submit', event => { if (event.target.id === 'equipment-form') { event.preventDefault(); applyEquipment(event.target); } if (event.target.id === 'replacement-form') { event.preventDefault(); applyCustomExercise(event.target); } });
+        document.addEventListener('click', async event => {
+            const button = event.target.closest('[data-action]'); if (!button) return;
+            const action = button.dataset.action, index = Number(button.dataset.index), setIndex = Number(button.dataset.set);
+            if (action === 'reload-app') location.reload();
+            if (action === 'history') showHistory(index);
+            if (action === 'backups') showBackups();
+            if (action === 'export-review') exportReview();
+            if (action === 'import-review') document.getElementById('backup-file').click();
+            if (action === 'rollback-review') rollbackReview();
+            if (action === 'map-history') mapHistory(index, button.dataset.record);
+            if (action === 'equipment') showEquipment(index);
+            if (action === 'pair') { const item = configuration()[index]; state.pairs.set(state.session + '|' + state.venue + '|' + item.group, item.key); render(); }
+            if (action === 'unavailable') showUnavailable(index);
+            if (action === 'custom-exercise') showCustomExercise(index);
+            if (action === 'substitute') changeExercise(index, button.dataset.exercise);
+            if (action === 'skip-exercise') changeExercise(index, 'skip');
+            if (action === 'restore-exercise') changeExercise(index, 'restore');
+            if (action === 'complete') completeSet(index, setIndex);
+            if (action === 'add-set') { draftFor(configuration()[index]).push({ weight: '', reps: '', rir: '', done: false }); render(); }
+            if (action === 'remove-set') { const draft = draftFor(configuration()[index]), last = draft[draft.length - 1]; if (entryHasValues(last)) { if (!(await confirmAction('Remove this set?', 'The last set and its entered values will be removed.', 'Remove set'))) return; } draft.pop(); render(); }
+            if (action === 'close-sheet') closeSheet();
+            if (action === 'confirm-sheet') closeSheet(true);
+            if (action === 'pause-timer') toggleTimer();
+            if (action === 'close-timer') stopTimer();
+            if (action === 'finish') finish();
+            if (action === 'finish-confirm') finishSample();
+            if (action === 'review-draft') reviewDraft(button.dataset.draft);
+            if (action === 'reset-preview') { if (state.archive) { toast('Imported history is protected. Use a full backup and rollback instead.'); return; } if ((hasAnyDraftEntries() || state.history.size || state.custom.size || state.equipment.size) && !(await confirmAction('Reset demo entries?', 'Demo drafts and demo workout history will be cleared.', 'Reset'))) return; state.drafts.clear(); state.draftItems.clear(); state.equipment.clear(); state.custom.clear(); state.customExercises.clear(); state.history.clear(); state.pairs.clear(); state.substitutions.clear(); state.skipped.clear(); state.notes.clear(); state.workouts = []; state.sampleSessions = 0; stopTimer(); render(); toast('Demo entries reset.'); }
+        });
+        sheet.addEventListener('cancel', () => { if (sheetResolution) { const resolve = sheetResolution; sheetResolution = null; resolve(false); } });
+        let resizeTimeout;
+        window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(() => { if (sheet.open && document.getElementById('history-chart')) { const title = document.getElementById('sheet-title').textContent; const item = configuration().find(candidate => title === candidate.name + ' history'); if (item) drawHistory(historyFor(selectedEquipment(item)), selectedEquipment(item)); } }, 100); });
+        if (typeof indexedDB === 'undefined') render();
+        else startReviewStorage();
+        if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
+        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && location.protocol !== 'file:') {
+            // A new version installs in the background; offer a reload rather than interrupting a workout.
+            const hadController = !!navigator.serviceWorker.controller;
+            navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) document.getElementById('update-bar').hidden = false; });
+            navigator.serviceWorker.register('sw.js').then(registration => {
+                document.addEventListener('visibilitychange', () => { if (!document.hidden) registration.update().catch(() => { }); });
+            }).catch(error => console.error('Offline cache unavailable:', error.message));
+        }
+    </script>
 </body>
+
 </html>
