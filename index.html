@@ -170,6 +170,10 @@ canvas{display:block;width:100%}
   font-size:.85rem;z-index:120;display:none;white-space:nowrap;box-shadow:0 6px 20px #0008;
 }
 #toast.on{display:block}
+#updateBar{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 8px);background:#232838;border:1px solid #5b6cf0;
+  color:#e6e9ef;padding:10px 14px;border-radius:12px;font-size:.85rem;z-index:130;display:none;align-items:center;gap:10px;box-shadow:0 6px 20px #0008}
+#updateBar.on{display:flex}
+#updateBar span{flex:1}
 .diffline{font-size:.8rem;margin:3px 0}
 .diffline b{color:#f59e0b}
 @media(min-width:520px){.kpis{grid-template-columns:repeat(6,1fr)}}
@@ -180,7 +184,7 @@ canvas{display:block;width:100%}
 <header>
   <div>
     <h1>💪 YF Tracker</h1>
-    <div class="ver" id="versionLabel">v1.7 · loading program</div>
+    <div class="ver" id="versionLabel">v1.7.1 · loading program</div>
   </div>
   <div class="spacer"></div>
   <button class="badge" id="unsavedBadge" data-act="sync">● 0 unsaved</button>
@@ -287,19 +291,20 @@ canvas{display:block;width:100%}
 </div>
 
 <div id="ovl"><div id="modal"></div></div>
+<div id="updateBar"><span>New version ready.</span><button class="btn primary sm" data-act="reloadApp">Reload</button></div>
 <div id="toast"></div>
 <input type="file" id="fileImport" accept=".json,application/json" style="display:none">
 
 <script>
 'use strict';
 /* =====================================================================
-   YF Tracker v1.7 — single-file offline health & training tracker
+   YF Tracker v1.7.1 — single-file offline health & training tracker
    Data lives in IndexedDB. Sync = JSON export -> iCloud -> Mac merge.
    ===================================================================== */
 
 /* ---------------- IndexedDB tiny promise wrapper ---------------- */
 const DB_NAME='yf-tracker', DB_VER=1;
-const APP_VERSION='v1.7';
+const APP_VERSION='v1.7.1';
 let _db=null;
 function openDB(){
   return new Promise((res,rej)=>{
@@ -1142,6 +1147,7 @@ document.addEventListener('click',async e=>{
   else if(a==='delDay')delDay(t.dataset.date);
   else if(a==='help')helpPanel();
   else if(a==='sync')syncPanel();
+  else if(a==='reloadApp')location.reload();
   else if(a==='expShare'){$('#ovl').classList.remove('on');doExport(true)}
   else if(a==='expDown'){$('#ovl').classList.remove('on');doExport(false)}
   else if(a==='expCsv'){$('#ovl').classList.remove('on');doCsv()}
@@ -1226,7 +1232,15 @@ window.addEventListener('resize',()=>{clearTimeout(_rzTm);_rzTm=setTimeout(()=>{
 /* -------- init -------- */
 (async function init(){
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
+  if('serviceWorker' in navigator){
+    // A new service worker takes over after install; offer a reload instead of forcing one mid-entry.
+    const hadController=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController)$('#updateBar').classList.add('on')});
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      // iOS keeps the app suspended, so check for a new version each time it returns to the foreground.
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update().catch(()=>{})});
+    }).catch(function(){});
+  }
   await openDB();
   await loadAll();
   renderVersion();
