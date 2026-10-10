@@ -29,7 +29,7 @@ vm.runInContext(fs.readFileSync(path.join(__dirname, 'review-store.js'), 'utf8')
 vm.runInContext(script, context);
 // Production starts without demo data; these checks exercise the demo catalog explicitly.
 vm.runInContext('state.demo = true', context);
-const api = vm.runInContext('({state, configuration, selectedEquipment, draftFor, workoutEntries, historyFor, referenceFor, elsewhereFor, pruneIdleDraftDates, loadConfirmed, formatSets, finish, finishSample, loadOptionHTML, closeSheet, completeSet, timer, stopTimer, guidanceFor, knownExercise, legacyWorkout, hasAnyDraftEntries, importBackup, reviewDraft})', context);
+const api = vm.runInContext('({state, configuration, selectedEquipment, draftFor, workoutEntries, historyFor, referenceFor, elsewhereFor, pruneIdleDraftDates, repairState, repairBundle, loadConfirmed, formatSets, finish, finishSample, loadOptionHTML, closeSheet, completeSet, timer, stopTimer, guidanceFor, knownExercise, legacyWorkout, hasAnyDraftEntries, importBackup, reviewDraft})', context);
 const backup = require('./review-store.js');
 const catalogBefore = vm.runInContext('JSON.stringify(equipmentCatalog)', context);
 const json = value => JSON.parse(JSON.stringify(value));
@@ -159,6 +159,8 @@ check('Known TTL plate machines start with a usable total-plates convention', ()
     for (const key of ['hsTriceps', 'preacher']) assert.equal(api.selectedEquipment(itemFor(key)).unit, 'kg total plates');
     reset('lower-b', 'ttl');
     assert.equal(api.selectedEquipment(itemFor('hack')).unit, 'kg total plates');
+    assert.equal(api.selectedEquipment(api.knownExercise('kneelingCurl')).unit, 'kg per arm');
+    assert.equal(api.selectedEquipment(itemFor('seatedCurl')).unit, 'kg');
     reset('lower-a', 'ttl');
     assert.equal(api.selectedEquipment(itemFor('belt')).unit, 'kg total plates');
 });
@@ -170,6 +172,39 @@ check('Both TTL leg days use the weighted jackknife and no oblique machine', () 
         assert.ok(keys.includes('jackknife'));
         assert.ok(!keys.includes('oblique'));
     }
+});
+
+check('TTL Lower B uses the seated leg curl and keeps the Oct 6 loads as its reference', () => {
+    reset('lower-b', 'ttl');
+    const keys = api.configuration().map(item => item.key);
+    assert.ok(keys.includes('seatedCurl') && !keys.includes('kneelingCurl'));
+    api.state.archive = { app: 'yf-tracker', version: 1, health: [], program: null, workouts: [{ date: '06/10/2026', session: 'Lower B \u00b7 TTL', location: 'ToTheLimitGym', exercises: [
+        { name: 'Kneeling leg curl iso-lateral (HS)', sets: [{ weight: 10, reps: 18, rir: 2 }, { weight: 15, reps: 15, rir: 1 }, { weight: 68, reps: 10, rir: 1 }, { weight: 68, reps: 9, rir: 1 }] }] }] };
+    const seated = api.selectedEquipment(itemFor('seatedCurl'));
+    const reference = api.referenceFor(seated);
+    assert.deepEqual(json(reference.record.sets.map(set => [set.weight, set.reps])), [[68, 10], [68, 9]]);
+    assert.equal(reference.record.venue, 'ttl');
+    const kneeling = api.selectedEquipment({ ...api.knownExercise('kneelingCurl') });
+    assert.deepEqual(json(api.historyFor(kneeling).map(record => record.sets.map(set => set.weight))), [[10, 15]]);
+});
+
+check('Every exercise offered in the change menu has a definition', () => {
+    const missing = vm.runInContext(`(() => { const keys = new Set(); for (const [k, v] of Object.entries(alternatives)) { keys.add(k); v.forEach(x => keys.add(x)); } for (const k of Object.keys(equipmentCatalog)) keys.add(k); return [...keys].filter(k => !knownExercise(k)); })()`, context);
+    assert.deepEqual(json(missing), []);
+});
+
+check('The stale Oct 10 Lower A is repaired in saved state and in imported files, once', () => {
+    const state = [{ date: '09/10/2026', session: 'lower-a', venue: 'ttl', exercises: [] }];
+    assert.equal(api.repairState(state)[0].date, '10/10/2026');
+    const bundle = { workouts: [{ date: '09/10/2026', session: 'Lower A', exercises: [{ name: 'Oblique crunch machine (HS)', equipment_name: 'Weighted jackknife', sets: [] }, { name: 'Ab bench crunch', sets: [] }] }], tracker_review: { state: { workouts: [{ date: '09/10/2026', session: 'lower-a' }] } } };
+    const fixed = json(api.repairBundle(bundle));
+    assert.equal(fixed.workouts[0].date, '10/10/2026');
+    assert.deepEqual(fixed.workouts[0].exercises.map(exercise => exercise.name), ['Weighted jackknife', 'Ab bench crunch']);
+    assert.equal(fixed.tracker_review.state.workouts[0].date, '10/10/2026');
+    const withHistory = json(api.repairBundle({ workouts: bundle.workouts.map(workout => ({ ...workout, date: '09/10/2026' })), tracker_review: { state: { workouts: [], history: [['ab-ttl', [{ date: '09/10/2026', session: 'lower-a', sets: [] }, { date: '08/10/2026', session: 'upper-b', sets: [] }]]] } } }));
+    assert.deepEqual(withHistory.tracker_review.state.history[0][1].map(record => record.date), ['10/10/2026', '08/10/2026']);
+    const other = [{ date: '09/10/2026', session: 'upper-c' }, { date: '09/10/2026', session: 'lower-a' }, { date: '10/10/2026', session: 'lower-a' }];
+    assert.equal(api.repairState(other)[1].date, '09/10/2026');
 });
 
 check('RIR zero, recorded RIR and unknown RIR stay distinct', () => {

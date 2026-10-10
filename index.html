@@ -967,7 +967,7 @@
         const gear = (id, name, kind, unit, venues, previous = null, date = 'Oct 5') => ({ id, name, kind, unit, venues, previous, date });
         const shared = (id, name, unit, previous) => gear(id, name, 'Free weight', unit, ['ttl', 'bf', 'home'], previous, 'Oct 4');
         const equipmentVenues = equipment => equipment.venues.map(venue => venueNames[venue]).join(' / ');
-        const loadChoices = [['unconfirmed', 'Not confirmed'], ['kg', 'Stack or cable reading (kg)'], ['kg total plates', 'Total added plates (kg)'], ['kg per arm', 'Plates per arm (kg)'], ['kg / DB', 'Each dumbbell (kg)'], ['kg barbell', 'Bar plus plates (kg)'], ['kg added', 'Additional weight (kg)'], ['kg total', 'Total dumbbell weight (kg)'], ['BW', 'Bodyweight']];
+        const loadChoices = [['unconfirmed', 'Not confirmed'], ['kg', 'Stack or cable reading (kg)'], ['kg total plates', 'Total added plates (kg)'], ['kg per arm', 'Plates per side (kg)'], ['kg / DB', 'Each dumbbell (kg)'], ['kg barbell', 'Bar plus plates (kg)'], ['kg added', 'Additional weight (kg)'], ['kg total', 'Total dumbbell weight (kg)'], ['BW', 'Bodyweight']];
         function loadConfirmed(equipment) {
             return equipment.kind !== 'Unidentified setup' && !['kg plates', 'kg logged', 'unconfirmed'].includes(equipment.unit);
         }
@@ -1000,8 +1000,8 @@
             rdl: [shared('barbell-rdl', 'Barbell Romanian deadlift', 'kg', reference(80, [6, 6, 6, 6], 2))],
             glute: [gear('glute-ttl', 'Hammer Strength Glute Drive', 'Plate-loaded', 'kg total plates', ['ttl'], reference(80, [12, 11, 10], 2))],
             lyingCurl: [gear('lying-ttl', 'Hammer Strength lying curl', 'Weight stack', 'kg', ['ttl'], reference(46, [12, 10, 9])), gear('lying-bf', 'Lying leg curl', 'Weight stack', 'kg', ['bf'], reference(54, [12, 11, 10]))],
-            seatedCurl: [gear('seated-bf', 'Seated leg curl', 'Weight stack', 'kg', ['bf'], reference(68, [10, 9]))],
-            kneelingCurl: [gear('kneeling-ttl', 'HS kneeling iso-lateral curl', 'Plate-loaded', 'kg total plates', ['ttl'], reference(15, [15, 13, 12]))],
+            seatedCurl: [gear('seated-ttl', 'Seated leg curl', 'Weight stack', 'kg', ['ttl'], reference(68, [10, 9]), 'Oct 6'), gear('seated-bf', 'Seated leg curl', 'Weight stack', 'kg', ['bf'], reference(54, [12, 10]), 'Sep 4')],
+            kneelingCurl: [gear('kneeling-ttl', 'HS kneeling iso-lateral curl', 'Plate-loaded', 'kg per arm', ['ttl'], reference(15, [15, 13, 12]))],
             extension: [gear('extension-ttl', 'Hammer Strength leg extension', 'Weight stack', 'kg', ['ttl'], reference(82, [12, 10, 9])), gear('extension-bf', 'Leg extension', 'Weight stack', 'kg', ['bf'], reference(75, [12, 11, 10]))],
             hack: [gear('hack-ttl', 'Hack squat - TTL', 'Plate-loaded', 'kg total plates', ['ttl'], reference(50, [10, 10, 10, 9])), gear('hack-bf', 'Hack squat - Basic Fit', 'Plate-loaded', 'kg total plates', ['bf'], reference(50, [8, 8, 7, 7]))],
             abBench: [gear('ab-ttl', 'Ab bench crunch', 'Plate-loaded', 'kg total plates', ['ttl'], reference(12.5, [10, 9, 9, 8]))],
@@ -1037,7 +1037,7 @@
             const ttl = venue === 'ttl';
             if (session === 'upper-a') return [exercise('pulldown', 'Wide-grip pulldown', 3, '8-10', '1-2', '2:30'), exercise('closeRow', 'Close-grip row', 3, '10', '1-2', '2:30'), exercise('bench', 'Barbell bench press', 4, '5-8', '1-2', '3:00'), exercise('singlePull', 'Single-arm pulldown', 3, '10', '2', '2:00'), exercise('dips', 'Weighted dips', 3, '8-10', '2', '2:00'), exercise('shrug', 'Barbell shrug', 3, '12-15', '1', '1:30', 'Superset: traps and side delts'), exercise('lateral', 'Lateral raise', 3, '12-15', '1', '1:30', 'Superset: traps and side delts'), exercise('facePull', 'Face pulls', 3, '12-15', '1', '1:00')];
             if (session === 'lower-a') return ttl ? [exercise('belt', 'Belt squat', 4, '8-12', '1-2', '2:30'), exercise('rdl', 'Romanian deadlift', 4, '8', '2', '3:00'), exercise('glute', 'Glute Drive', 3, '8-12', '1', '2:00'), exercise('lyingCurl', 'Lying leg curl', 3, '10-12', '1', '1:30'), ...abs(true)] : [exercise('squat', 'Barbell back squat', 4, '5-8', '2', '3:00'), exercise('splitSquat', 'Bulgarian split squat', 4, '10 / leg', '2', '2:00'), exercise('rdl', 'Romanian deadlift', 4, '8', '2', '3:00'), ...abs(false)];
-            if (session === 'lower-b') return ttl ? [exercise('hack', 'Hack squat', 4, '8-12', '1-2', '2:30'), exercise('kneelingCurl', 'Kneeling iso-lateral curl', 3, '10-15 / leg', '1', '1:30'), exercise('extension', 'Leg extension', 3, '10-15', '0-1', '1:30'), ...abs(true)] : [exercise('hack', 'Hack squat', 4, '10', '1-2', '2:30'), exercise('lyingCurl', 'Lying leg curl', 3, '10', '1', '1:30'), exercise('seatedCurl', 'Seated leg curl', 2, '10', '1', '1:30'), exercise('extension', 'Leg extension', 3, '10-12', '0-1', '1:30'), ...abs(false)];
+            if (session === 'lower-b') return ttl ? [exercise('hack', 'Hack squat', 4, '8-12', '1-2', '2:30'), exercise('seatedCurl', 'Seated leg curl', 3, '10-12', '1', '1:30'), exercise('extension', 'Leg extension', 3, '10-15', '0-1', '1:30'), ...abs(true)] : [exercise('hack', 'Hack squat', 4, '10', '1-2', '2:30'), exercise('lyingCurl', 'Lying leg curl', 3, '10', '1', '1:30'), exercise('seatedCurl', 'Seated leg curl', 2, '10', '1', '1:30'), exercise('extension', 'Leg extension', 3, '10-12', '0-1', '1:30'), ...abs(false)];
             if (session === 'upper-c') {
                 // Oct 9 revision: two back exercises, then incline press and the fly pair, pullover, face pulls with laterals.
                 const back = ttl ? [exercise('isoRow', 'Iso-Lateral Row', 4, '10-12', '1-2', '2:00'), exercise('frontPulldown', 'Iso-Lateral Front Lat Pulldown', 3, '8-10', '1-2', '2:30')] : [exercise('pulldown', 'Wide-grip pulldown', 4, '8-10', '1-2', '2:30'), exercise('wideRow', 'Wide-grip row', 3, '10', '1-2', '2:30')];
@@ -1061,13 +1061,21 @@
             });
         }
         function isSkipped(item) { return state.skipped.has(state.session + '|' + state.venue + '|' + item.slotKey); }
+        // Exercises no layout programs any more, still selectable from the change-exercise menu.
+        const extraExercises = {
+            kneelingCurl: exercise('kneelingCurl', 'Kneeling iso-lateral curl', 3, '10-15 / leg', '1', '1:30'),
+            oblique: exercise('oblique', 'Oblique crunch', 3, '12-15 / side', '1', '1:00', 'Abs'),
+            hammer: exercise('hammer', 'Hammer curl', 3, '10', '1', '1:30'),
+            dyRow: exercise('dyRow', 'D.Y. Row', 4, '8-12', '1-2', '2:00'),
+            highRow: exercise('highRow', 'High Row', 3, '10-12', '1-2', '2:00')
+        };
         function knownExercise(key) {
             if (state.customExercises.has(key)) return state.customExercises.get(key);
             for (const session of Object.keys(sessionNames)) for (const venue of ['ttl', 'bf']) {
                 const item = baseConfiguration(session, venue).find(candidate => candidate.key === key);
                 if (item) return item;
             }
-            return null;
+            return extraExercises[key] || null;
         }
         const alternatives = {
             pulldown: ['frontPulldown'], frontPulldown: ['pulldown'], isoRow: ['wideRow', 'closeRow'], closeRow: ['wideRow', 'isoRow'], wideRow: ['closeRow', 'isoRow'],
@@ -1104,7 +1112,10 @@
             const name = record.exercise.name.toLowerCase().trim();
             const options = [...(equipmentCatalog[key] || []), ...[...state.custom.values()].filter(option => option.exerciseKey === key)].filter(option => option.venues.includes(record.venue));
             const matches = options.filter(option => exportedExerciseName({ exerciseKey: key, equipmentName: option.name, name: option.name }).toLowerCase().trim() === name);
-            return matches.length === 1 ? matches[0].id : null;
+            if (matches.length === 1) return matches[0].id;
+            // A venue with a single known setup for this exercise: any known name of the exercise identifies it.
+            const known = knownExercise(key), aliases = new Set([known && known.name, ...(legacyNames[key] || [])].filter(Boolean).map(alias => alias.toLowerCase().trim()));
+            return !matches.length && options.length === 1 && aliases.has(name) ? options[0].id : null;
         }
         function historyFor(equipment) {
             const saved = state.history.get(equipment.id) || [];
@@ -1398,6 +1409,7 @@
         };
         function recordTime(date) { const parts = date.split('/').map(Number); return parts.length === 3 ? new Date(parts[2], parts[1] - 1, parts[0]).getTime() : 0; }
         const archiveCorrections = {
+            '06/10/2026|Lower B \u00b7 TTL': [{ from: 'Kneeling leg curl iso-lateral (HS)', splitAt: 2, to: 'Seated leg curl' }],
             '02/10/2026|Upper C \u00b7 TTL': [{ from: '\u00c9cart\u00e9 halt\u00e8re pec', splitAt: 2, to: 'Pec fly machine' }],
             '09/10/2026|Upper C \u00b7 TTL': [{ from: 'Iso-Lateral D.Y. Row (HS)', to: 'Iso-Lateral Row (HS)' }, { from: 'Iso-Lateral High Row (HS)', to: 'Iso-Lateral Front Lat Pulldown (HS)' }, { from: '\u00c9cart\u00e9 halt\u00e8re pec', splitAt: 2, to: 'Pec fly machine' }]
         };
@@ -1424,10 +1436,30 @@
             if (exercise.exerciseKey === 'reverse' && /cable|pulley/i.test(exercise.equipmentName)) return legacyNames.reverse[1];
             return (legacyNames[exercise.exerciseKey] || [exercise.name])[0];
         }
-        // One-off: Lower A trained on Oct 10 was saved with a stale Oct 9 date (fixed in v2.2).
-        const dateFixes = { '09/10/2026|lower-a': '10/10/2026' };
+        // One-off repair: Lower A trained on Oct 10 was saved by v2.1 with a stale Oct 9 date, and its jackknife on
+        // the oblique slot. Applied to saved state at startup and to any imported file, so exports stay consistent.
+        function repairHistory(records) {
+            for (const record of records || []) if (record.date === '09/10/2026' && record.session === 'lower-a') record.date = '10/10/2026';
+        }
+        function repairState(workouts) {
+            for (const workout of workouts || []) if (workout.date === '09/10/2026' && workout.session === 'lower-a' && !workouts.some(other => other.date === '10/10/2026' && other.session === 'lower-a')) workout.date = '10/10/2026';
+            return workouts;
+        }
+        function repairBundle(bundle) {
+            if (!bundle || !Array.isArray(bundle.workouts)) return bundle;
+            const stale = bundle.workouts.find(workout => workout.date === '09/10/2026' && workout.session === 'Lower A');
+            if (stale && !bundle.workouts.some(workout => workout.date === '10/10/2026' && workout.session === 'Lower A')) {
+                stale.date = '10/10/2026';
+                for (const exercise of stale.exercises || []) if (exercise.name === 'Oblique crunch machine (HS)' && /jackknife/i.test(exercise.equipment_name || '')) exercise.name = 'Weighted jackknife';
+                if (bundle.tracker_review && bundle.tracker_review.state) {
+                    repairState(bundle.tracker_review.state.workouts);
+                    for (const entry of bundle.tracker_review.state.history || []) repairHistory(entry[1]);
+                }
+            }
+            return bundle;
+        }
         function legacyWorkout(workout) {
-            return { date: dateFixes[workout.date + '|' + workout.session] || workout.date, session: sessionNames[workout.session], location: venueNames[workout.venue], exercises: workout.exercises.map(exercise => ({ name: exportedExerciseName(exercise), target: exercise.target || '', rest: exercise.rest || '', note: exercise.note || '', sets: exercise.sets.map(set => ({ weight: set.weight, reps: set.reps, ...(set.rir == null ? {} : { rir: set.rir }) })), equipment_id: exercise.equipmentId, equipment_name: exercise.equipmentName, load_unit: exercise.unit })) };
+            return { date: workout.date, session: sessionNames[workout.session], location: venueNames[workout.venue], exercises: workout.exercises.map(exercise => ({ name: exportedExerciseName(exercise), target: exercise.target || '', rest: exercise.rest || '', note: exercise.note || '', sets: exercise.sets.map(set => ({ weight: set.weight, reps: set.reps, ...(set.rir == null ? {} : { rir: set.rir }) })), equipment_id: exercise.equipmentId, equipment_name: exercise.equipmentName, load_unit: exercise.unit })) };
         }
         function currentSnapshot() { return { state: TrackerReview.pack(state), archive: state.archive ? TrackerReview.clone(state.archive) : null, savedAt: new Date().toISOString() }; }
         function saveReview() {
@@ -1442,7 +1474,7 @@
             try {
                 persistence.store = await TrackerReview.openStore(indexedDB);
                 const snapshot = await persistence.store.get('current');
-                if (snapshot) { TrackerReview.apply(state, snapshot.state); state.archive = snapshot.archive; }
+                if (snapshot) { TrackerReview.apply(state, snapshot.state); state.archive = snapshot.archive; repairState(state.workouts); for (const records of state.history.values()) repairHistory(records); }
                 const exported = await persistence.store.get('exported');
                 exportedWorkouts = exported && Number.isFinite(exported.count) ? exported.count : state.workouts.length;
                 persistence.ready = true; pruneIdleDraftDates(); render();
@@ -1489,7 +1521,7 @@
             try {
                 if (hasAnyDraftEntries()) { openSheet('Active drafts protected', '<p class="sheet-message">Finish the current draft before importing another backup. You can export it now; none of its entered values have changed.</p><div class="sheet-actions"><button class="command secondary" data-action="close-sheet">Keep logging</button><button class="command" data-action="export-review">Export current backup</button></div>'); return; }
                 if (file.size > 20 * 1024 * 1024) throw new Error('Backup exceeds the 20 MB review limit.');
-                const incoming = TrackerReview.validateBundle(JSON.parse(await file.text()));
+                const incoming = TrackerReview.validateBundle(repairBundle(JSON.parse(await file.text())));
                 TrackerReview.validateReviewRecords(incoming, legacyWorkout);
                 if (incoming.app === 'yf-tracker-review' && state.archive && state.archive.app === 'yf-tracker') throw new Error('Demo backups cannot be mixed into imported workout history.');
                 const current = state.archive ? TrackerReview.legacyArchive(TrackerReview.buildBundle(state, legacyWorkout)) : null;
