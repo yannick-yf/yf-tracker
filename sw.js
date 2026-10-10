@@ -1,4 +1,4 @@
-const CACHE = 'yf-tracker-v11';
+const CACHE = 'yf-tracker-v12';
 const ASSETS = ['index.html', 'review-store.js', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(a => new Request(a, {cache: 'reload'})))).then(() => self.skipWaiting()));

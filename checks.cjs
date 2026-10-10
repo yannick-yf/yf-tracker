@@ -13,7 +13,7 @@ const listeners = new Map();
 function nodeFor(id) {
     if (!nodes.has(id)) {
         nodes.set(id, {
-            value: '', textContent: '', innerHTML: '', hidden: false, open: false,
+            value: '', textContent: '', innerHTML: '', hidden: false, open: false, style: {},
             classList: { remove() { }, add() { } }, setAttribute() { }, addEventListener() { },
             showModal() { this.open = true; }, close() { this.open = false; }
         });
@@ -29,7 +29,7 @@ vm.runInContext(fs.readFileSync(path.join(__dirname, 'review-store.js'), 'utf8')
 vm.runInContext(script, context);
 // Production starts without demo data; these checks exercise the demo catalog explicitly.
 vm.runInContext('state.demo = true', context);
-const api = vm.runInContext('({state, configuration, selectedEquipment, draftFor, workoutEntries, historyFor, referenceFor, elsewhereFor, loadConfirmed, formatSets, finish, finishSample, loadOptionHTML, closeSheet, completeSet, timer, stopTimer, guidanceFor, knownExercise, legacyWorkout, hasAnyDraftEntries, importBackup, reviewDraft})', context);
+const api = vm.runInContext('({state, configuration, selectedEquipment, draftFor, workoutEntries, historyFor, referenceFor, elsewhereFor, pruneIdleDraftDates, loadConfirmed, formatSets, finish, finishSample, loadOptionHTML, closeSheet, completeSet, timer, stopTimer, guidanceFor, knownExercise, legacyWorkout, hasAnyDraftEntries, importBackup, reviewDraft})', context);
 const backup = require('./review-store.js');
 const catalogBefore = vm.runInContext('JSON.stringify(equipmentCatalog)', context);
 const json = value => JSON.parse(JSON.stringify(value));
@@ -130,16 +130,46 @@ check('Earlier sample workouts and history remain unchanged after subsequent sav
 });
 
 check('Unknown conventions cannot be completed or silently assigned', () => {
-    reset('upper-b', 'ttl');
+    reset('upper-b', 'hotel');
     const item = itemFor('preacher');
     const raw = api.selectedEquipment(item);
+    assert.equal(raw.kind, 'Unidentified setup');
     assert.equal(api.loadConfirmed(raw), false);
     putSet(item, 0, entered(12.5, 10, 1));
     api.finishSample();
     assert.equal(api.state.workouts.length, 0);
-    const confirmed = { ...raw, id: 'preacher-test-per-arm', sourceId: raw.id, unit: 'kg per arm', previous: null, exerciseKey: item.key };
+    const confirmed = { ...raw, id: 'preacher-test-per-arm', sourceId: raw.id, kind: 'Plate-loaded', unit: 'kg per arm', previous: null, exerciseKey: item.key };
     assert.equal(api.historyFor(confirmed).length, 0);
     assert.equal(api.loadConfirmed(confirmed), true);
+});
+
+check('Known TTL plate machines start with a usable total-plates convention', () => {
+    reset('lower-a', 'ttl');
+    for (const key of ['glute', 'abBench']) {
+        const equipment = api.selectedEquipment(itemFor(key));
+        assert.equal(equipment.unit, 'kg total plates');
+        assert.equal(api.loadConfirmed(equipment), true);
+    }
+    reset('upper-c', 'ttl');
+    assert.equal(api.selectedEquipment(itemFor('isoRow')).unit, 'kg per arm');
+    assert.equal(api.selectedEquipment(itemFor('frontPulldown')).unit, 'kg per arm');
+    reset('upper-b', 'ttl');
+    assert.equal(api.selectedEquipment(itemFor('shoulderPress')).unit, 'kg per arm');
+    assert.equal(api.selectedEquipment(itemFor('lateral')).unit, 'kg per arm');
+    for (const key of ['hsTriceps', 'preacher']) assert.equal(api.selectedEquipment(itemFor(key)).unit, 'kg total plates');
+    reset('lower-b', 'ttl');
+    assert.equal(api.selectedEquipment(itemFor('hack')).unit, 'kg total plates');
+    reset('lower-a', 'ttl');
+    assert.equal(api.selectedEquipment(itemFor('belt')).unit, 'kg total plates');
+});
+
+check('Both TTL leg days use the weighted jackknife and no oblique machine', () => {
+    for (const session of ['lower-a', 'lower-b']) {
+        reset(session, 'ttl');
+        const keys = api.configuration().map(item => item.key);
+        assert.ok(keys.includes('jackknife'));
+        assert.ok(!keys.includes('oblique'));
+    }
 });
 
 check('RIR zero, recorded RIR and unknown RIR stay distinct', () => {
@@ -365,6 +395,18 @@ check('Draft dates are separate and survive backup restore', () => {
     assert.equal(api.state.draftDates.get('upper-b|ttl'), '2099-01-02');
     const restored = {}; backup.apply(restored, backup.pack(api.state));
     assert.equal(restored.draftDates.get('lower-a|ttl'), '2099-01-01');
+});
+
+check('Idle past draft dates fall back to today and dated drafts are kept', () => {
+    reset('lower-a', 'ttl'); api.state.dateISO = '2020-01-01';
+    api.configuration().forEach(item => api.draftFor(item));
+    assert.equal(api.state.draftDates.get('lower-a|ttl'), '2020-01-01');
+    assert.equal(api.pruneIdleDraftDates(), true);
+    assert.equal(api.state.draftDates.has('lower-a|ttl'), false);
+    assert.notEqual(api.state.dateISO, '2020-01-01');
+    reset('lower-a', 'ttl'); api.state.dateISO = '2020-01-01'; putSet(itemFor('rdl'), 0, entered(80, 6, 2));
+    api.pruneIdleDraftDates();
+    assert.equal(api.state.draftDates.get('lower-a|ttl'), '2020-01-01');
 });
 
 check('A canonical session cannot duplicate its same-day historical TTL variant', () => {

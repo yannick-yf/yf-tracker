@@ -43,6 +43,7 @@
         }
 
         button {
+            touch-action: manipulation;
             cursor: pointer;
             color: inherit;
         }
@@ -56,6 +57,8 @@
         select {
             width: 100%;
             min-height: 44px;
+            font-size: 16px;
+            touch-action: manipulation;
             background: #11141a;
             color: var(--text);
             border: 1px solid var(--line);
@@ -770,7 +773,6 @@
             }
 
             select {
-                font-size: 14px;
                 padding-left: 8px;
             }
 
@@ -882,11 +884,9 @@
                 <div class="brand-name">YF Tracker</div>
                 <div class="small muted">Train</div>
             </div>
-            <div class="concept" id="review-mode">v2.1</div>
-            <button class="icon-button" data-action="backups" title="Backups and restore"
-                aria-label="Backups and restore"><svg class="icon">
-                    <use href="#i-history" />
-                </svg></button>
+            <div class="concept" id="review-mode">v2.2</div>
+            <button class="command secondary" data-action="backups" id="backup-button" title="Backups and restore"
+                aria-label="Backups and restore">Backup</button>
         </div>
     </header>
     <div class="update-bar" id="update-bar" hidden><span>New version ready.</span><button class="command" data-action="reload-app">Reload</button></div>
@@ -956,7 +956,7 @@
         const venueNames = { ttl: 'ToTheLimitGym', bf: 'Basic Fit', home: 'Home', hotel: 'Hotel', other: 'Other' };
         const sessionNames = { 'upper-a': 'Upper A', 'lower-a': 'Lower A', 'upper-b': 'Upper B', 'upper-c': 'Upper C', 'lower-b': 'Lower B' };
         const sessionSubtitles = { 'upper-a': 'Chest and back - heavy', 'lower-a': 'Quads, hamstrings and abs', 'upper-b': 'Shoulders and arms', 'upper-c': 'Chest and back - volume', 'lower-b': 'Leg accessories and abs' };
-        const APP_VERSION = 'v2.1';
+        const APP_VERSION = 'v2.2';
         const todayISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
         const dateDM = iso => iso.split('-').reverse().join('/');
         const state = { session: 'upper-a', venue: 'ttl', dateISO: todayISO(), archive: null, drafts: new Map(), draftItems: new Map(), draftDates: new Map(), equipment: new Map(), custom: new Map(), customExercises: new Map(), history: new Map(), workouts: [], pairs: new Map(), substitutions: new Map(), skipped: new Set(), mappings: new Map(), notes: new Map(), sampleSessions: 0 };
@@ -992,47 +992,47 @@
             singlePull: [gear('single-ttl', 'Single-arm cable', 'Weight stack', 'kg', ['ttl'], reference(56, [11, 8])), gear('single-bf', 'Single-arm cable', 'Weight stack', 'kg', ['bf'], reference(36, [11, 10, 10]))],
             dips: [shared('weighted-dips', 'Weighted dips', 'kg added', reference(10, [7, 7, 6]))],
             shrug: [shared('barbell-shrug', 'Barbell shrug', 'kg', reference(75, [12, 12, 11]))],
-            lateral: [gear('lateral-ttl', 'Flame Sport 3PLX', 'Plate-loaded', 'kg plates', ['ttl'], reference(2.5, [10, 9, 8])), shared('lateral-db', 'Dumbbell lateral raise', 'kg / DB', reference(7, [15, 14, 12]))],
+            lateral: [gear('lateral-ttl', 'Flame Sport 3PLX', 'Plate-loaded', 'kg per arm', ['ttl'], reference(2.5, [10, 9, 8])), shared('lateral-db', 'Dumbbell lateral raise', 'kg / DB', reference(7, [15, 14, 12]))],
             facePull: [gear('face-bf', 'Face-pull cable', 'Weight stack', 'kg', ['bf'], reference(27, [15, 13, 12])), gear('face-home', 'Garage pulley', 'Cable pulley', 'kg', ['home'], reference(20, [15, 14, 12]))],
             squat: [shared('barbell-squat', 'Barbell back squat', 'kg', reference(82.5, [5, 5, 4, 4], 2))],
-            belt: [gear('belt-ttl', 'Belt squat', 'Plate-loaded', 'kg plates', ['ttl'], reference(60, [8, 8, 4]))],
+            belt: [gear('belt-ttl', 'Belt squat', 'Plate-loaded', 'kg total plates', ['ttl'], reference(60, [8, 8, 4]))],
             splitSquat: [shared('split-db', 'Bulgarian split squat', 'kg total', reference(36, [10, 10, 9, 8], 2))],
             rdl: [shared('barbell-rdl', 'Barbell Romanian deadlift', 'kg', reference(80, [6, 6, 6, 6], 2))],
-            glute: [gear('glute-ttl', 'Hammer Strength Glute Drive', 'Plate-loaded', 'kg plates', ['ttl'], reference(80, [12, 11, 10], 2))],
+            glute: [gear('glute-ttl', 'Hammer Strength Glute Drive', 'Plate-loaded', 'kg total plates', ['ttl'], reference(80, [12, 11, 10], 2))],
             lyingCurl: [gear('lying-ttl', 'Hammer Strength lying curl', 'Weight stack', 'kg', ['ttl'], reference(46, [12, 10, 9])), gear('lying-bf', 'Lying leg curl', 'Weight stack', 'kg', ['bf'], reference(54, [12, 11, 10]))],
             seatedCurl: [gear('seated-bf', 'Seated leg curl', 'Weight stack', 'kg', ['bf'], reference(68, [10, 9]))],
-            kneelingCurl: [gear('kneeling-ttl', 'HS kneeling iso-lateral curl', 'Plate-loaded', 'kg plates', ['ttl'], reference(15, [15, 13, 12]))],
+            kneelingCurl: [gear('kneeling-ttl', 'HS kneeling iso-lateral curl', 'Plate-loaded', 'kg total plates', ['ttl'], reference(15, [15, 13, 12]))],
             extension: [gear('extension-ttl', 'Hammer Strength leg extension', 'Weight stack', 'kg', ['ttl'], reference(82, [12, 10, 9])), gear('extension-bf', 'Leg extension', 'Weight stack', 'kg', ['bf'], reference(75, [12, 11, 10]))],
-            hack: [gear('hack-ttl', 'Hack squat - TTL', 'Plate-loaded', 'kg plates', ['ttl'], reference(50, [10, 10, 10, 9])), gear('hack-bf', 'Hack squat - Basic Fit', 'Plate-loaded', 'kg plates', ['bf'], reference(50, [8, 8, 7, 7]))],
-            abBench: [gear('ab-ttl', 'Ab bench crunch', 'Plate-loaded', 'kg plates', ['ttl'], reference(12.5, [10, 9, 9, 8]))],
-            oblique: [gear('oblique-ttl', 'Hammer Strength oblique crunch', 'Plate-loaded', 'kg plates', ['ttl'], reference(5, [12, 11, 10]))],
+            hack: [gear('hack-ttl', 'Hack squat - TTL', 'Plate-loaded', 'kg total plates', ['ttl'], reference(50, [10, 10, 10, 9])), gear('hack-bf', 'Hack squat - Basic Fit', 'Plate-loaded', 'kg total plates', ['bf'], reference(50, [8, 8, 7, 7]))],
+            abBench: [gear('ab-ttl', 'Ab bench crunch', 'Plate-loaded', 'kg total plates', ['ttl'], reference(12.5, [10, 9, 9, 8]))],
+            oblique: [gear('oblique-ttl', 'Hammer Strength oblique crunch', 'Plate-loaded', 'kg total plates', ['ttl'], reference(5, [12, 11, 10]))],
             jackknife: [shared('jackknife-cable', 'Weighted jackknife', 'kg', reference(40, [12, 12, 11, 10]))],
             twist: [shared('twist-plate', 'Russian twist', 'kg', reference(20, [20, 20, 20]))],
             legRaise: [gear('leg-raise', 'Slow leg raise', 'Bodyweight', 'BW', ['ttl', 'bf', 'home', 'hotel'], reference(0, [15, 14]))],
             situp: [gear('sit-up', 'Sit-up', 'Bodyweight', 'BW', ['bf', 'home', 'hotel'], reference(0, [25]))],
             plank: [gear('plank', 'Plank', 'Bodyweight', 'BW', ['bf', 'home', 'hotel'], reference(0, [50, 45]))],
             ohp: [shared('standing-ohp', 'Standing barbell OHP', 'kg', reference(40, [5, 4, 4, 4])), gear('seated-home-ohp', 'Seated barbell OHP', 'Free weight', 'kg', ['home'], reference(35, [7, 6, 6, 5]))],
-            shoulderPress: [gear('shoulder-ttl', 'Hammer Strength shoulder press', 'Plate-loaded', 'kg plates', ['ttl'], reference(20, [8, 7, 5])), gear('shoulder-bf', 'Shoulder press machine', 'Weight stack', 'kg', ['bf'], reference(35, [10, 9, 8]))],
+            shoulderPress: [gear('shoulder-ttl', 'Hammer Strength shoulder press', 'Plate-loaded', 'kg per arm', ['ttl'], reference(20, [8, 7, 5])), gear('shoulder-bf', 'Shoulder press machine', 'Weight stack', 'kg', ['bf'], reference(35, [10, 9, 8]))],
             rearDelt: [gear('rear-ttl', 'Rear-delt machine', 'Weight stack', 'kg', ['ttl'], reference(54, [10, 9, 8])), gear('rear-bf', 'Rear-delt cable fly', 'Cable pulley', 'kg', ['bf'], reference(8, [15, 13, 12]))],
             inclineCurl: [shared('incline-db-curl', 'Incline dumbbell curl', 'kg / DB', reference(12.5, [10, 9, 8, 7]))],
             overhead: [gear('overhead-bf', 'Overhead cable triceps', 'Weight stack', 'kg', ['bf'], reference(32, [12, 11, 10, 9])), gear('overhead-home', 'Garage overhead cable', 'Cable pulley', 'kg', ['home'], reference(25, [12, 11, 10, 9]))],
             rope: [gear('rope-ttl', 'Rope triceps pushdown', 'Weight stack', 'kg', ['ttl'], reference(35, [13, 13, 12, 10])), gear('rope-bf', 'Rope triceps pushdown', 'Weight stack', 'kg', ['bf'], reference(54, [10, 9, 8, 8]))],
-            hsTriceps: [gear('triceps-ttl', 'Hammer Strength triceps extension', 'Plate-loaded', 'kg plates', ['ttl'], reference(46, [12, 12, 10]))],
-            preacher: [gear('preacher-ttl', 'Hammer Strength preacher curl', 'Plate-loaded', 'kg logged', ['ttl'], reference(12.5, [10, 9]), 'Oct 7'), gear('preacher-bf', 'Preacher curl machine', 'Weight stack', 'kg', ['bf'], reference(18, [12, 10]), 'Sep 25')],
+            hsTriceps: [gear('triceps-ttl', 'Hammer Strength triceps extension', 'Plate-loaded', 'kg total plates', ['ttl'], reference(46, [12, 12, 10]))],
+            preacher: [gear('preacher-ttl', 'Hammer Strength preacher curl', 'Plate-loaded', 'kg total plates', ['ttl'], reference(12.5, [10, 9]), 'Oct 7'), gear('preacher-bf', 'Preacher curl machine', 'Weight stack', 'kg', ['bf'], reference(18, [12, 10]), 'Sep 25')],
             reverse: [gear('reverse-cable-ttl', 'Cable reverse curl', 'Cable pulley', 'kg', ['ttl']), shared('reverse-ez', 'EZ-bar reverse curl', 'kg', reference(36, [12, 11, 10]))],
             hammer: [shared('hammer-db', 'Dumbbell hammer curl', 'kg / DB', reference(14, [12, 11, 10]))],
             isoRow: [gear('iso-row-ttl', 'Hammer Strength Iso-Lateral Row', 'Plate-loaded', 'kg per arm', ['ttl'])],
             frontPulldown: [gear('front-pulldown-ttl', 'Hammer Strength Iso-Lateral Front Lat Pulldown', 'Plate-loaded', 'kg per arm', ['ttl'])],
             pecFly: [gear('pecfly-ttl', 'Pec fly machine', 'Weight stack', 'kg', ['ttl'])],
-            dyRow: [gear('dy-ttl', 'Hammer Strength D.Y. Row', 'Plate-loaded', 'kg plates', ['ttl'], reference(30, [10, 9, 8, 8]))],
-            highRow: [gear('high-ttl', 'Hammer Strength High Row', 'Plate-loaded', 'kg plates', ['ttl'], reference(40, [10, 9, 8]))],
+            dyRow: [gear('dy-ttl', 'Hammer Strength D.Y. Row', 'Plate-loaded', 'kg total plates', ['ttl'], reference(30, [10, 9, 8, 8]))],
+            highRow: [gear('high-ttl', 'Hammer Strength High Row', 'Plate-loaded', 'kg total plates', ['ttl'], reference(40, [10, 9, 8]))],
             wideRow: [gear('wide-bf', 'Wide-grip cable row', 'Weight stack', 'kg', ['bf'], reference(52, [8, 8, 7]))],
             inclinePress: [shared('incline-db-press', 'Incline dumbbell press', 'kg / DB', reference(25, [8, 8, 7]))],
             fly: [shared('db-fly', 'Dumbbell chest fly', 'kg / DB', reference(20, [10, 9, 8]))],
             pullover: [gear('pullover-ttl', 'Cable pullover - TTL', 'Weight stack', 'kg', ['ttl'], reference(44, [12, 10, 10])), gear('pullover-bf', 'Cable pullover - Basic Fit', 'Weight stack', 'kg', ['bf'], reference(44, [11, 10, 9]))]
         };
         const exercise = (key, name, sets, reps, rir, rest, group = '') => ({ key, name, sets, reps, rir, rest, group });
-        const abs = ttl => ttl ? [exercise('abBench', 'Ab bench crunch', 4, '10-15', '1', '1:00', 'Abs'), exercise('oblique', 'Oblique crunch', 3, '12-15 / side', '1', '1:00', 'Abs'), exercise('legRaise', 'Slow leg raise', 2, '12-15', '1', '1:00', 'Abs')] : [exercise('jackknife', 'Weighted jackknife', 4, '12', '', '1:00', 'Abs'), exercise('twist', 'Russian twist', 3, '20', '', '0:45', 'Abs'), exercise('legRaise', 'Slow leg raise', 1, '25', '', '0:45', 'Abs'), exercise('situp', 'Sit-ups', 1, '25', '', '0:45', 'Abs'), exercise('plank', 'Plank', 2, '45-60 sec', '', '0:45', 'Abs')];
+        const abs = ttl => ttl ? [exercise('abBench', 'Ab bench crunch', 4, '10-15', '1', '1:00', 'Abs'), exercise('jackknife', 'Weighted jackknife', 3, '12', '', '1:00', 'Abs'), exercise('legRaise', 'Slow leg raise', 2, '12-15', '1', '1:00', 'Abs')] : [exercise('jackknife', 'Weighted jackknife', 4, '12', '', '1:00', 'Abs'), exercise('twist', 'Russian twist', 3, '20', '', '0:45', 'Abs'), exercise('legRaise', 'Slow leg raise', 1, '25', '', '0:45', 'Abs'), exercise('situp', 'Sit-ups', 1, '25', '', '0:45', 'Abs'), exercise('plank', 'Plank', 2, '45-60 sec', '', '0:45', 'Abs')];
         function baseConfiguration(session = state.session, venue = state.venue) {
             const ttl = venue === 'ttl';
             if (session === 'upper-a') return [exercise('pulldown', 'Wide-grip pulldown', 3, '8-10', '1-2', '2:30'), exercise('closeRow', 'Close-grip row', 3, '10', '1-2', '2:30'), exercise('bench', 'Barbell bench press', 4, '5-8', '1-2', '3:00'), exercise('singlePull', 'Single-arm pulldown', 3, '10', '2', '2:00'), exercise('dips', 'Weighted dips', 3, '8-10', '2', '2:00'), exercise('shrug', 'Barbell shrug', 3, '12-15', '1', '1:30', 'Superset: traps and side delts'), exercise('lateral', 'Lateral raise', 3, '12-15', '1', '1:30', 'Superset: traps and side delts'), exercise('facePull', 'Face pulls', 3, '12-15', '1', '1:00')];
@@ -1158,6 +1158,18 @@
             const where = record.venue ? 'Last time in another venue - ' + venueNames[record.venue] : 'Last time - venue not recorded';
             return '<div class="elsewhere"><span aria-hidden="true">\u2194</span> ' + escapeHTML(where + ' ' + record.date) + ': ' + escapeHTML(formatSets(record.sets, equipment.unit === 'BW', false)) + ' - context only</div>';
         }
+        // A date typed by the user is kept only while its workout has entries or a past date has not gone stale.
+        function pruneIdleDraftDates() {
+            const today = todayISO();
+            let changed = false;
+            for (const [key, iso] of [...state.draftDates]) {
+                if (iso >= today) continue;
+                const hasValues = [...state.drafts].some(([draftKey, draft]) => draftKey.startsWith(key + '|') && draft.some(entryHasValues)) || [...state.notes].some(([noteKey, note]) => noteKey.startsWith(key + '|') && note.trim());
+                if (!hasValues) { state.draftDates.delete(key); changed = true; }
+            }
+            if (!state.draftDates.has(state.session + '|' + state.venue) && state.dateISO < today) { state.dateISO = today; changed = true; }
+            return changed;
+        }
         function draftFor(item, equipment = selectedEquipment(item)) {
             const key = state.session + '|' + state.venue + '|' + item.key + '|' + equipment.id;
             if (!state.draftDates.has(state.session + '|' + state.venue)) state.draftDates.set(state.session + '|' + state.venue, state.dateISO);
@@ -1210,6 +1222,8 @@
         }
         function render() {
             document.getElementById('workout-date').value = state.dateISO;
+            const dateLabel = typeof document.querySelector === 'function' ? document.querySelector('label[for="workout-date"]') : null;
+            if (dateLabel) { dateLabel.textContent = state.dateISO === todayISO() ? 'Workout date' : 'Workout date - not today'; dateLabel.style.color = state.dateISO === todayISO() ? '' : 'var(--amber)'; }
             document.getElementById('review-mode').innerHTML = APP_VERSION + '<br>' + (state.archive ? 'Training log' : 'Import needed');
             const bottomBar = typeof document.querySelector === 'function' ? document.querySelector('.bottom-bar') : null;
             if (!state.archive && !state.demo) {
@@ -1245,6 +1259,7 @@
                 }).join('') + '<p class="guidance">' + escapeHTML(guidanceFor(item, equipment)) + '</p><label class="field" for="note-' + index + '">Workout note</label><input id="note-' + index + '" data-note="' + index + '" maxlength="500" value="' + escapeHTML(state.notes.get(state.session + '|' + state.venue + '|' + item.key + '|' + equipment.id) || '') + '"><div class="set-actions"><button class="icon-button" data-action="add-set" data-index="' + index + '" title="Add ' + escapeHTML(item.name) + ' set" aria-label="Add ' + escapeHTML(item.name) + ' set">' + icon('plus') + '</button><button class="icon-button" data-action="remove-set" data-index="' + index + '" title="Remove last ' + escapeHTML(item.name) + ' set" aria-label="Remove last ' + escapeHTML(item.name) + ' set"' + (draft.length === 1 ? ' disabled' : '') + '>' + icon('minus') + '</button><span class="small muted">' + (item.group.startsWith('Superset') ? 'Rest after both partners' : escapeHTML(loadLabel(equipment))) + '</span></div><div class="availability"><button class="text-command" data-action="unavailable" data-index="' + index + '">Equipment unavailable</button>' + (item.slotKey !== item.key ? '<button class="text-command" data-action="restore-exercise" data-index="' + index + '">Original exercise</button>' : '') + '</div></article>';
             }).join('');
             updateFooter();
+            updateBackupButton();
             saveReview();
         }
         function updateFooter() {
@@ -1405,11 +1420,14 @@
             if (exercise.exerciseKey === 'lateral' && /Flame Sport/i.test(exercise.equipmentName)) return legacyNames.lateral[1];
             if (exercise.exerciseKey === 'rearDelt' && /machine/i.test(exercise.equipmentName)) return 'Rear delt machine';
             if (exercise.exerciseKey === 'rope') return 'Rope triceps pushdown';
+            if (/jackknife/i.test(exercise.equipmentName || '')) return legacyNames.jackknife[0];
             if (exercise.exerciseKey === 'reverse' && /cable|pulley/i.test(exercise.equipmentName)) return legacyNames.reverse[1];
             return (legacyNames[exercise.exerciseKey] || [exercise.name])[0];
         }
+        // One-off: Lower A trained on Oct 10 was saved with a stale Oct 9 date (fixed in v2.2).
+        const dateFixes = { '09/10/2026|lower-a': '10/10/2026' };
         function legacyWorkout(workout) {
-            return { date: workout.date, session: sessionNames[workout.session], location: venueNames[workout.venue], exercises: workout.exercises.map(exercise => ({ name: exportedExerciseName(exercise), target: exercise.target || '', rest: exercise.rest || '', note: exercise.note || '', sets: exercise.sets.map(set => ({ weight: set.weight, reps: set.reps, ...(set.rir == null ? {} : { rir: set.rir }) })), equipment_id: exercise.equipmentId, equipment_name: exercise.equipmentName, load_unit: exercise.unit })) };
+            return { date: dateFixes[workout.date + '|' + workout.session] || workout.date, session: sessionNames[workout.session], location: venueNames[workout.venue], exercises: workout.exercises.map(exercise => ({ name: exportedExerciseName(exercise), target: exercise.target || '', rest: exercise.rest || '', note: exercise.note || '', sets: exercise.sets.map(set => ({ weight: set.weight, reps: set.reps, ...(set.rir == null ? {} : { rir: set.rir }) })), equipment_id: exercise.equipmentId, equipment_name: exercise.equipmentName, load_unit: exercise.unit })) };
         }
         function currentSnapshot() { return { state: TrackerReview.pack(state), archive: state.archive ? TrackerReview.clone(state.archive) : null, savedAt: new Date().toISOString() }; }
         function saveReview() {
@@ -1425,10 +1443,27 @@
                 persistence.store = await TrackerReview.openStore(indexedDB);
                 const snapshot = await persistence.store.get('current');
                 if (snapshot) { TrackerReview.apply(state, snapshot.state); state.archive = snapshot.archive; }
-                persistence.ready = true; render();
+                const exported = await persistence.store.get('exported');
+                exportedWorkouts = exported && Number.isFinite(exported.count) ? exported.count : state.workouts.length;
+                persistence.ready = true; pruneIdleDraftDates(); render();
             } catch (error) {
                 persistence.ready = false; document.getElementById('save-status').textContent = 'Storage unavailable - keep an exported backup'; render(); console.error(error);
             }
+        }
+        // Saved workouts at the last export, kept in the app's own database (not browser storage).
+        let exportedWorkouts = 0;
+        function unexportedCount() { return Math.max(0, state.workouts.length - exportedWorkouts); }
+        function markExported() {
+            exportedWorkouts = state.workouts.length;
+            if (persistence.store) persistence.store.put([['exported', { count: exportedWorkouts }]]).catch(() => { });
+            updateBackupButton();
+        }
+        function updateBackupButton() {
+            const button = document.getElementById('backup-button'), count = unexportedCount();
+            if (!button) return;
+            button.textContent = count ? 'Backup (' + count + ' not exported)' : 'Backup';
+            button.style.borderColor = count ? 'var(--amber)' : '';
+            button.style.color = count ? 'var(--amber)' : '';
         }
         function showBackups() {
             const count = state.archive ? state.archive.workouts.length + state.workouts.filter(workout => !state.archive.workouts.some(old => TrackerReview.identity(old) === TrackerReview.identity(legacyWorkout(workout)))).length : state.workouts.length;
@@ -1436,17 +1471,18 @@
         }
         async function exportReview() {
             try {
+                closeSheet();
                 await saveReview();
                 const bundle = TrackerReview.buildBundle(state, legacyWorkout);
                 const blob = new Blob([JSON.stringify(bundle, null, 1)], { type: 'application/json' });
                 const name = (state.archive ? 'yf-tracker-export-' : 'yf-tracker-review-demo-') + todayISO() + '.json';
                 const file = typeof File === 'function' ? new File([blob], name, { type: 'application/json' }) : null;
                 if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try { await navigator.share({ files: [file], title: 'YF Tracker export' }); toast('Exported.'); }
+                    try { await navigator.share({ files: [file], title: 'YF Tracker export' }); markExported(); toast('Exported.'); }
                     catch (error) { if (error.name !== 'AbortError') toast(error.message); }
                     return;
                 }
-                const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(link.href), 1000); toast('Full backup exported.');
+                const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(link.href), 1000); markExported(); toast('Full backup exported.');
             } catch (error) { toast(error.message); }
         }
         async function importBackup(file) {
@@ -1547,7 +1583,9 @@
             state.workouts.push(workout);
             for (const update of updates) state.history.set(update.id, [update.record, ...update.records]);
             for (const group of groups) { state.drafts.delete(group.key); state.draftItems.delete(group.key); state.notes.delete(group.key); }
-            state.sampleSessions++; closeSheet(); stopTimer(); render(); toast('All entered sample sets saved.'); window.scrollTo({ top: 0 });
+            state.sampleSessions++; closeSheet(); stopTimer(); render(); window.scrollTo({ top: 0 });
+            if (!state.demo) openSheet('Workout saved', '<p class="sheet-message">Saved on this phone. Export a backup to iCloud now so the Mac can merge it.</p><div class="sheet-actions"><button class="command secondary" data-action="close-sheet">Later</button><button class="command" data-action="export-review">Export now</button></div>');
+            else toast('All entered sample sets saved.');
         }
         function reviewDraft(key) {
             const [session, venue, exerciseKey, equipmentId] = key.split('|');
@@ -1635,6 +1673,8 @@
         sheet.addEventListener('cancel', () => { if (sheetResolution) { const resolve = sheetResolution; sheetResolution = null; resolve(false); } });
         let resizeTimeout;
         window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(() => { if (sheet.open && document.getElementById('history-chart')) { const title = document.getElementById('sheet-title').textContent; const item = configuration().find(candidate => title === candidate.name + ' history'); if (item) drawHistory(historyFor(selectedEquipment(item)), selectedEquipment(item)); } }, 100); });
+        // The app stays suspended overnight on iOS: drop stale idle dates whenever it returns to the foreground.
+        document.addEventListener('visibilitychange', () => { if (!document.hidden && persistence.ready && pruneIdleDraftDates()) { render(); saveReview(); } });
         if (typeof indexedDB === 'undefined') render();
         else startReviewStorage();
         if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
