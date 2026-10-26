@@ -207,6 +207,24 @@ check('The stale Oct 10 Lower A is repaired in saved state and in imported files
     assert.equal(api.repairState(other)[1].date, '09/10/2026');
 });
 
+check('The optional T-bar row sits after the Iso-Lateral Row at TTL Upper C only', () => {
+    reset('upper-c', 'ttl');
+    const keys = api.configuration().map(item => item.key);
+    assert.equal(keys.indexOf('tbarRow'), keys.indexOf('isoRow') + 1);
+    const equipment = api.selectedEquipment(itemFor('tbarRow'));
+    assert.equal(equipment.unit, 'kg total plates');
+    assert.equal(api.loadConfirmed(equipment), true);
+    for (const venue of ['bf', 'home', 'hotel', 'other']) {
+        reset('upper-c', venue);
+        assert.ok(!api.configuration().some(item => item.key === 'tbarRow'));
+    }
+    reset('upper-c', 'ttl');
+    putSet(itemFor('tbarRow'), 0, entered(40, 12, 2));
+    api.finishSample();
+    const exported = api.legacyWorkout(api.state.workouts[0]);
+    assert.equal(exported.exercises[0].name, 'T-bar row (optionnel)');
+});
+
 check('RIR zero, recorded RIR and unknown RIR stay distinct', () => {
     assert.ok(api.formatSets([{ weight: 70, reps: 9, rir: 0 }]).includes('RIR 0'));
     assert.ok(api.formatSets([{ weight: 70, reps: 9, rir: 3 }]).includes('RIR 3'));

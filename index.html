@@ -884,7 +884,7 @@
                 <div class="brand-name">YF Tracker</div>
                 <div class="small muted">Train</div>
             </div>
-            <div class="concept" id="review-mode">v2.2</div>
+            <div class="concept" id="review-mode">v2.3</div>
             <button class="command secondary" data-action="backups" id="backup-button" title="Backups and restore"
                 aria-label="Backups and restore">Backup</button>
         </div>
@@ -956,7 +956,7 @@
         const venueNames = { ttl: 'ToTheLimitGym', bf: 'Basic Fit', home: 'Home', hotel: 'Hotel', other: 'Other' };
         const sessionNames = { 'upper-a': 'Upper A', 'lower-a': 'Lower A', 'upper-b': 'Upper B', 'upper-c': 'Upper C', 'lower-b': 'Lower B' };
         const sessionSubtitles = { 'upper-a': 'Chest and back - heavy', 'lower-a': 'Quads, hamstrings and abs', 'upper-b': 'Shoulders and arms', 'upper-c': 'Chest and back - volume', 'lower-b': 'Leg accessories and abs' };
-        const APP_VERSION = 'v2.2';
+        const APP_VERSION = 'v2.3';
         const todayISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
         const dateDM = iso => iso.split('-').reverse().join('/');
         const state = { session: 'upper-a', venue: 'ttl', dateISO: todayISO(), archive: null, drafts: new Map(), draftItems: new Map(), draftDates: new Map(), equipment: new Map(), custom: new Map(), customExercises: new Map(), history: new Map(), workouts: [], pairs: new Map(), substitutions: new Map(), skipped: new Set(), mappings: new Map(), notes: new Map(), sampleSessions: 0 };
@@ -1021,6 +1021,7 @@
             preacher: [gear('preacher-ttl', 'Hammer Strength preacher curl', 'Plate-loaded', 'kg total plates', ['ttl'], reference(12.5, [10, 9]), 'Oct 7'), gear('preacher-bf', 'Preacher curl machine', 'Weight stack', 'kg', ['bf'], reference(18, [12, 10]), 'Sep 25')],
             reverse: [gear('reverse-cable-ttl', 'Cable reverse curl', 'Cable pulley', 'kg', ['ttl']), shared('reverse-ez', 'EZ-bar reverse curl', 'kg', reference(36, [12, 11, 10]))],
             hammer: [shared('hammer-db', 'Dumbbell hammer curl', 'kg / DB', reference(14, [12, 11, 10]))],
+            tbarRow: [gear('tbar-ttl', 'Chest-supported T-bar row', 'Plate-loaded', 'kg total plates', ['ttl'])],
             isoRow: [gear('iso-row-ttl', 'Hammer Strength Iso-Lateral Row', 'Plate-loaded', 'kg per arm', ['ttl'])],
             frontPulldown: [gear('front-pulldown-ttl', 'Hammer Strength Iso-Lateral Front Lat Pulldown', 'Plate-loaded', 'kg per arm', ['ttl'])],
             pecFly: [gear('pecfly-ttl', 'Pec fly machine', 'Weight stack', 'kg', ['ttl'])],
@@ -1040,7 +1041,7 @@
             if (session === 'lower-b') return ttl ? [exercise('hack', 'Hack squat', 4, '8-12', '1-2', '2:30'), exercise('seatedCurl', 'Seated leg curl', 3, '10-12', '1', '1:30'), exercise('extension', 'Leg extension', 3, '10-15', '0-1', '1:30'), ...abs(true)] : [exercise('hack', 'Hack squat', 4, '10', '1-2', '2:30'), exercise('lyingCurl', 'Lying leg curl', 3, '10', '1', '1:30'), exercise('seatedCurl', 'Seated leg curl', 2, '10', '1', '1:30'), exercise('extension', 'Leg extension', 3, '10-12', '0-1', '1:30'), ...abs(false)];
             if (session === 'upper-c') {
                 // Oct 9 revision: two back exercises, then incline press and the fly pair, pullover, face pulls with laterals.
-                const back = ttl ? [exercise('isoRow', 'Iso-Lateral Row', 4, '10-12', '1-2', '2:00'), exercise('frontPulldown', 'Iso-Lateral Front Lat Pulldown', 3, '8-10', '1-2', '2:30')] : [exercise('pulldown', 'Wide-grip pulldown', 4, '8-10', '1-2', '2:30'), exercise('wideRow', 'Wide-grip row', 3, '10', '1-2', '2:30')];
+                const back = ttl ? [exercise('isoRow', 'Iso-Lateral Row', 4, '10-12', '1-2', '2:00'), exercise('tbarRow', 'T-bar row (optional)', 3, '10-12', '1-2', '2:00'), exercise('frontPulldown', 'Iso-Lateral Front Lat Pulldown', 3, '8-10', '1-2', '2:30')] : [exercise('pulldown', 'Wide-grip pulldown', 4, '8-10', '1-2', '2:30'), exercise('wideRow', 'Wide-grip row', 3, '10', '1-2', '2:30')];
                 const finisher = 'Superset: face pulls and lateral raises';
                 return [...back, exercise('inclinePress', 'Incline dumbbell press', 3, '8-10', '1-2', '2:30'), exercise('fly', 'Dumbbell chest fly', 2, '10-12', '1', '1:30'), exercise('pecFly', 'Pec fly machine', 2, '10-12', '1', '1:30'), exercise('pullover', 'Cable pullover', 3, '10-12', '1', '1:30'), exercise('facePull', 'Face pulls', 3, '12-15', '1', '1:30', finisher), exercise('lateral', 'Lateral raise', 3, '12-15', '1', '1:30', finisher)];
             }
@@ -1078,7 +1079,7 @@
             return extraExercises[key] || null;
         }
         const alternatives = {
-            pulldown: ['frontPulldown'], frontPulldown: ['pulldown'], isoRow: ['wideRow', 'closeRow'], closeRow: ['wideRow', 'isoRow'], wideRow: ['closeRow', 'isoRow'],
+            pulldown: ['frontPulldown'], frontPulldown: ['pulldown'], tbarRow: ['isoRow', 'wideRow'], isoRow: ['wideRow', 'closeRow'], closeRow: ['wideRow', 'isoRow'], wideRow: ['closeRow', 'isoRow'],
             squat: ['belt', 'hack', 'splitSquat'], belt: ['squat', 'hack', 'splitSquat'], hack: ['squat', 'belt'],
             kneelingCurl: ['lyingCurl', 'seatedCurl'], lyingCurl: ['seatedCurl', 'kneelingCurl'], seatedCurl: ['lyingCurl', 'kneelingCurl'],
             overhead: ['rope', 'hsTriceps'], rope: ['overhead', 'hsTriceps'], hsTriceps: ['rope', 'overhead'],
@@ -1405,7 +1406,7 @@
         const legacyNames = {
             pulldown: ['Tirage vertical prise large'], closeRow: ['Tirage horizontal prise serr\u00e9'], bench: ['D\u00e9velopp\u00e9 couch\u00e9 barre'], singlePull: ['Tirage vertical unilat\u00e9ral'], dips: ['Dips (lest\u00e9s ou BW)'], shrug: ['Shrug barre'], lateral: ['\u00c9l\u00e9vations lat\u00e9rales', '\u00c9l\u00e9vations lat\u00e9rales machine (Flame Sport 3PLX) (optionnel)'],
             squat: ['Back squat barre'], splitSquat: ['Bulgarian split squat'], rdl: ['Romanian deadlift barre'], belt: ['Belt squat'], glute: ['Glute Drive (HS)'], lyingCurl: ['Leg curl allong\u00e9'], seatedCurl: ['Leg curl assis'], kneelingCurl: ['Kneeling leg curl iso-lateral (HS)'], extension: ['Leg extension'], hack: ['Hack squat'], abBench: ['Ab bench crunch'], oblique: ['Oblique crunch machine (HS)'], jackknife: ['Weighted jackknife'], twist: ['Russian twist'], legRaise: ['Leg raise slow'], situp: ['Sit-ups feet on ground (optionnel)'], plank: ['Plank hold'],
-            ohp: ['Standing OHP barbell', 'Seated OHP barbell'], shoulderPress: ['Shoulder press machine (optionnel)'], rearDelt: ['Rear delt cable fly', 'Rear delt machine'], inclineCurl: ['Curl inclin\u00e9 halt\u00e8res'], overhead: ['Overhead triceps'], rope: ['Triceps barre poulie haute'], hsTriceps: ['Triceps Extension machine (HS) (optionnel)'], preacher: ['Preacher curl'], reverse: ['Reverse curl EZ', 'Reverse curl poulie'], hammer: ['Hammer curl'], dyRow: ['Iso-Lateral D.Y. Row (HS)'], highRow: ['Iso-Lateral High Row (HS)'], wideRow: ['Tirage horizontal prise large'], inclinePress: ['D\u00e9velopp\u00e9 inclin\u00e9 halt\u00e8res'], fly: ['\u00c9cart\u00e9 halt\u00e8re pec'], pullover: ['Pull-over cable'], facePull: ['Face pulls'], isoRow: ['Iso-Lateral Row (HS)'], frontPulldown: ['Iso-Lateral Front Lat Pulldown (HS)'], pecFly: ['Pec fly machine']
+            ohp: ['Standing OHP barbell', 'Seated OHP barbell'], shoulderPress: ['Shoulder press machine (optionnel)'], rearDelt: ['Rear delt cable fly', 'Rear delt machine'], inclineCurl: ['Curl inclin\u00e9 halt\u00e8res'], overhead: ['Overhead triceps'], rope: ['Triceps barre poulie haute'], hsTriceps: ['Triceps Extension machine (HS) (optionnel)'], preacher: ['Preacher curl'], reverse: ['Reverse curl EZ', 'Reverse curl poulie'], hammer: ['Hammer curl'], dyRow: ['Iso-Lateral D.Y. Row (HS)'], highRow: ['Iso-Lateral High Row (HS)'], wideRow: ['Tirage horizontal prise large'], inclinePress: ['D\u00e9velopp\u00e9 inclin\u00e9 halt\u00e8res'], fly: ['\u00c9cart\u00e9 halt\u00e8re pec'], pullover: ['Pull-over cable'], facePull: ['Face pulls'], isoRow: ['Iso-Lateral Row (HS)'], tbarRow: ['T-bar row (optionnel)'], frontPulldown: ['Iso-Lateral Front Lat Pulldown (HS)'], pecFly: ['Pec fly machine']
         };
         function recordTime(date) { const parts = date.split('/').map(Number); return parts.length === 3 ? new Date(parts[2], parts[1] - 1, parts[0]).getTime() : 0; }
         const archiveCorrections = {
